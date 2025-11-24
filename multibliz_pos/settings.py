@@ -27,16 +27,12 @@ SECRET_KEY = 'django-insecure-iw*h!o%90q+fg1=pu_6y*p5fz$&gbk14ytyjwkal__va3xbgo(
 DEBUG = True
 
 ALLOWED_HOSTS = []
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
 
-# CSRF Trusted Origins for Railway
+# CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
-if RAILWAY_STATIC_URL:
-    CSRF_TRUSTED_ORIGINS.append(RAILWAY_STATIC_URL)
 
 
 # Application definition
