@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Returns - Multibliz POS{% endblock %}
+
+{% block content %}
+<style>
+    .returns-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .returns-header h2 {
+        color: white;
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+    }
+    
+    .search-box {
+        flex: 1;
+        min-width: 250px;
+        position: relative;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: none;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.95);
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+    
+    .search-box input:focus {
+        outline: none;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #667eea;
+    }
+    
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.95);
+        font-size: 0.95rem;
+        min-width: 150px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .filter-select:focus {
+        outline: none;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-create {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+        text-decoration: none;
+    }
+    
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(245, 87, 108, 0.4);
+        color: white;
+    }
+    
+    .returns-table {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .returns-table table {
+        width: 100%;
+        margin: 0;
+    }
+    
+    .returns-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .returns-table thead th {
+        color: white;
+        font-weight: 600;
+        padding: 1.2rem 1rem;
+        border: none;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .returns-table tbody tr {
+        border-bottom: 1px solid #f0f0f0;
+        transition: all 0.3s;
+    }
+    
+    .returns-table tbody tr:hover {
+        background: linear-gradient(to right, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        transform: scale(1.01);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .returns-table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+    
+    .return-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .status-pending {
+        background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        color: #d63031;
+    }
+    
+    .status-approved {
+        background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        color: white;
+    }
+    
+    .status-rejected {
+        background: linear-gradient(135deg, #fab1a0 0%, #e17055 100%);
+        color: white;
+    }
+    
+    .status-completed {
+        background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+        color: white;
+    }
+    
+    .action-btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-view {
+        background: linear-gradient(135deg, #a8e6cf 0%, #3eecac 100%);
+        color: white;
+    }
+    
+    .btn-view:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(62, 236, 172, 0.3);
+        color: white;
+    }
+    
+    .btn-edit {
+        background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(25, 84, 123, 0.3);
+        color: white;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #95a5a6;
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.3;
+    }
+    
+    .empty-state h3 {
+        color: #7f8c8d;
+        margin-bottom: 1rem;
+    }
+    
+    .pagination {
+        margin-top: 2rem;
+        justify-content: center;
+    }
+    
+    .pagination .page-link {
+        border: none;
+        border-radius: 8px;
+        margin: 0 0.2rem;
+        color: #667eea;
+        font-weight: 600;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+</style>
+
+<div class="returns-header">
+    <h2>
+        <i class="fas fa-undo"></i>
+        Product Returns Management
+    </h2>
+    <div class="header-actions">
+        <form method="get" class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" name="search" placeholder="Search by sale ID, product, or customer..." 
+                   value="{{ request.GET.search }}" id="searchInput">
+        </form>
+        <select class="filter-select" id="statusFilter" onchange="filterByStatus(this.value)">
+            <option value="">All Status</option>
+            {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <a href="{% url 'return_create' %}" class="btn-create">
+            <i class="fas fa-plus"></i>
+            New Return
+        </a>
+    </div>
+</div>
+
+<div class="returns-table">
+    {% if returns %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Return ID</th>
+                <th>Sale ID</th>
+                <th>Product</th>
+                <th>Customer</th>
+                <th>Quantity</th>
+                <th>Refund Amount</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Return Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="returnsTableBody">
+            {% for return in returns %}
+            <tr>
+                <td><strong>#{{ return.id }}</strong></td>
+                <td><a href="{% url 'sale_detail' return.sale.id %}" style="color: #667eea; text-decoration: none;">#{{ return.sale.id }}</a></td>
+                <td>{{ return.sale.product.name }}</td>
+                <td>{{ return.sale.customer_name|default:"N/A" }}</td>
+                <td>{{ return.quantity_returned }}</td>
+                <td><strong>₱{{ return.refund_amount|floatformat:2 }}</strong></td>
+                <td>{{ return.get_reason_display }}</td>
+                <td>
+                    <span class="return-badge status-{{ return.status }}">
+                        {% if return.status == 'pending' %}
+                            <i class="fas fa-clock"></i>
+                        {% elif return.status == 'approved' %}
+                            <i class="fas fa-check"></i>
+                        {% elif return.status == 'rejected' %}
+                            <i class="fas fa-times"></i>
+                        {% elif return.status == 'completed' %}
+                            <i class="fas fa-check-double"></i>
+                        {% endif %}
+                        {{ return.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ return.return_date|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'return_detail' return.id %}" class="action-btn btn-view" data-bs-toggle="tooltip" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{% url 'return_update' return.id %}" class="action-btn btn-edit" data-bs-toggle="tooltip" title="Update Status">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-undo"></i>
+        <h3>No Returns Found</h3>
+        <p>There are no product returns in the system yet.</p>
+        <a href="{% url 'return_create' %}" class="btn-create" style="display: inline-flex; margin-top: 1rem;">
+            <i class="fas fa-plus"></i>
+            Create First Return
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Previous</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Last</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<script>
+    // Real-time search functionality
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            this.form.submit();
+        }, 500);
+    });
+    
+    // Filter by status
+    function filterByStatus(status) {
+        const url = new URL(window.location.href);
+        if (status) {
+            url.searchParams.set('status', status);
+        } else {
+            url.searchParams.delete('status');
+        }
+        window.location.href = url.toString();
+    }
+    
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Sale{% else %}Record Sale{% endif %} - Multibliz POS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <!-- Form Header -->
+            <div class="mb-4">
+                <h1 class="mb-2">{% if object %}Edit Sale Record{% else %}Record New Sale{% endif %}</h1>
+                <p class="text-muted">{% if object %}Update sale information and transaction details{% else %}Record a new sale transaction with product, quantity, and price information{% endif %}</p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-body p-5">
+                    <form method="post" novalidate class="sale-form">
+                        {% csrf_token %}
+
+                        <!-- Product Selection -->
+                        <div class="form-group">
+                            <label for="{{ form.product.id_for_label }}" class="form-label">
+                                <i class="fas fa-shopping-cart text-primary"></i>Product
+                            </label>
+                            {{ form.product }}
+                            {% if form.product.errors %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="fas fa-exclamation-circle"></i>{{ form.product.errors.0 }}
+                                </div>
+                            {% else %}
+                                <small class="form-text">Select product to sell</small>
+                            {% endif %}
+                        </div>
+
+                        <!-- Quantity & Total Price Row -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.quantity.id_for_label }}" class="form-label">
+                                        <i class="fas fa-cubes text-info"></i>Quantity
+                                    </label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-circle"></i>{{ form.quantity.errors.0 }}
+                                        </div>
+                                    {% else %}
+                                        <small class="form-text">Units sold</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.total_price.id_for_label }}" class="form-label">
+                                        <i class="fas fa-peso-sign text-success"></i>Total Price (₱)
+                                    </label>
+                                    {{ form.total_price }}
+                                    {% if form.total_price.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-circle"></i>{{ form.total_price.errors.0 }}
+                                        </div>
+                                    {% else %}
+                                        <small class="form-text">Transaction amount</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Customer Name (Optional) -->
+                        {% if form.customer_name %}
+                        <div class="form-group">
+                            <label for="{{ form.customer_name.id_for_label }}" class="form-label">
+                                <i class="fas fa-user-circle text-secondary"></i>Customer Name <span class="text-muted small">(Optional)</span>
+                            </label>
+                            {{ form.customer_name }}
+                            {% if form.customer_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="fas fa-exclamation-circle"></i>{{ form.customer_name.errors.0 }}
+                                </div>
+                            {% else %}
+                                <small class="form-text">Buyer name or reference</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-3 mt-5">
+                            <button type="submit" class="btn btn-success btn-lg flex-grow-1 rounded-2 shadow-sm">
+                                <i class="fas fa-{% if object %}pencil-alt{% else %}check-circle{% endif %}"></i>
+                                {% if object %}Update Sale{% else %}Record Sale{% endif %}
+                            </button>
+                            <a href="{% url 'sale_list' %}" class="btn btn-outline-secondary btn-lg rounded-2">
+                                <i class="fas fa-times"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="alert alert-success mt-4 rounded-3">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-info-circle me-3 mt-1"></i>
+                    <div>
+                        <h6 class="mb-1">Recording Sales</h6>
+                        <small class="text-muted">
+                            Ensure accurate quantity and pricing to maintain correct sales reports. Customer names are optional but help with customer relationship tracking.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Real-time form validation feedback
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.sale-form');
+    if (!form) return;
+
+    const inputs = form.querySelectorAll('input, select, textarea');
+
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            validateField(this);
+        });
+
+        input.addEventListener('blur', function() {
+            validateField(this);
+        });
+
+        input.addEventListener('focus', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+
+    function validateField(field) {
+        const isValid = field.checkValidity();
+        const parent = field.closest('.form-group');
+
+        if (field.value === '') {
+            field.classList.remove('is-valid', 'is-invalid');
+        } else if (isValid) {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        } else {
+            field.classList.remove('is-valid');
+            field.classList.add('is-invalid');
+        }
+    }
+
+    form.addEventListener('submit', function(e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+});
+    </script>
+{% endblock %}

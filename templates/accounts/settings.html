@@ -1,0 +1,848 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Account Settings - Multibliz POS{% endblock %}
+
+{% block content %}
+<div style="display: flex; min-height: calc(100vh - 120px); background: #f5f6f7; margin: -20px -15px 0 -15px;">
+    <!-- Sidebar Navigation -->
+    <aside style="
+        width: 220px;
+        background: white;
+        box-shadow: 3px 0 15px rgba(0, 0, 0, 0.1);
+        padding: 0;
+        border-right: 1px solid #ecf0f1;
+        min-height: 100%;
+    ">
+        <div style="
+            padding: 25px 20px;
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            border-bottom: 1px solid #f0f0f0;
+        ">Menu</div>
+        
+        <ul style="list-style: none; padding: 0; margin: 0;">
+            <li>
+                <a href="#general" class="nav-link" data-tab="general" style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 15px 20px;
+                    color: #007bff;
+                    text-decoration: none;
+                    border-left: 3px solid #007bff;
+                    transition: all 0.3s ease;
+                    font-size: 13px;
+                    font-weight: 600;
+                    background: #e8f0ff;
+                ">
+                    <i class="fas fa-user" style="font-size: 15px; width: 18px; text-align: center;"></i> General
+                </a>
+            </li>
+            <li>
+                <a href="#security" class="nav-link" data-tab="security" style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 15px 20px;
+                    color: #666;
+                    text-decoration: none;
+                    border-left: 3px solid transparent;
+                    transition: all 0.3s ease;
+                    font-size: 13px;
+                    font-weight: 500;
+                " onmouseover="this.style.background='#f9f9f9'; this.style.color='#333';" onmouseout="if(this.getAttribute('data-tab') !== getCurrentTab()) { this.style.background=''; this.style.color='#666'; }">
+                    <i class="fas fa-shield-alt" style="font-size: 15px; width: 18px; text-align: center;"></i> Security
+                </a>
+            </li>
+            {% if user.is_staff %}
+            <li>
+                <a href="#users" class="nav-link" data-tab="users" style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 15px 20px;
+                    color: #666;
+                    text-decoration: none;
+                    border-left: 3px solid transparent;
+                    transition: all 0.3s ease;
+                    font-size: 13px;
+                    font-weight: 500;
+                " onmouseover="this.style.background='#f9f9f9'; this.style.color='#333';" onmouseout="if(this.getAttribute('data-tab') !== getCurrentTab()) { this.style.background=''; this.style.color='#666'; }">
+                    <i class="fas fa-users" style="font-size: 15px; width: 18px; text-align: center;"></i> User Management
+                </a>
+            </li>
+            {% if user.is_staff and user.is_superuser %}
+            <li>
+                <a href="#audit-trail" class="nav-link" data-tab="audit-trail" style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 15px 20px;
+                    color: #666;
+                    text-decoration: none;
+                    border-left: 3px solid transparent;
+                    transition: all 0.3s ease;
+                    font-size: 13px;
+                    font-weight: 500;
+                " onmouseover="this.style.background='#f9f9f9'; this.style.color='#333';" onmouseout="if(this.getAttribute('data-tab') !== getCurrentTab()) { this.style.background=''; this.style.color='#666'; }">
+                    <i class="fas fa-clipboard-list" style="font-size: 15px; width: 18px; text-align: center;"></i> Audit Trail
+                </a>
+            </li>
+            {% endif %}
+            {% endif %}
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main style="flex: 1; padding: 40px; background: #f5f6f7;">
+        <!-- General Tab -->
+        <div id="general" class="settings-tab" style="display: block;">
+            <div style="margin-bottom: 30px;">
+                <h1 style="font-size: 28px; font-weight: 700; color: #2c3e50; margin: 0 0 8px 0;">General Settings</h1>
+                <p style="color: #7f8c8d; margin: 0; font-size: 13px;">Manage your profile information and basic details</p>
+            </div>
+
+            <!-- Profile Section -->
+            <div style="background: white; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 28px; padding-bottom: 22px; border-bottom: 1px solid #ecf0f1;">
+                    <div style="
+                        width: 80px;
+                        height: 80px;
+                        border-radius: 50%;
+                        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: white;
+                        font-size: 28px;
+                        font-weight: 700;
+                        flex-shrink: 0;
+                        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.25);
+                    ">
+                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                    </div>
+                    <div>
+                        <h2 style="font-size: 18px; font-weight: 700; color: #2c3e50; margin: 0 0 4px 0;">{{ user.get_full_name|default:"User" }}</h2>
+                        <p style="color: #95a5a6; margin: 0; font-size: 13px;">{{ user.get_user_type_display|default:"Staff" }}</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">First Name</label>
+                        <div style="font-size: 14px; color: #555; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ecf0f1;">{{ user.first_name|default:"—" }}</div>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Last Name</label>
+                        <div style="font-size: 14px; color: #555; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ecf0f1;">{{ user.last_name|default:"—" }}</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
+                    <a href="{% url 'edit_profile' %}" style="
+                        padding: 10px 24px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        text-decoration: none;
+                        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                        color: white;
+                        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0, 123, 255, 0.3)';" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(0, 123, 255, 0.2)';">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Contact Details Section -->
+            <div style="background: white; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                <div style="font-size: 15px; font-weight: 700; color: #2c3e50; margin-bottom: 22px;">Contact Details</div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Username</label>
+                        <div style="font-size: 14px; color: #555; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ecf0f1;">{{ user.username }}</div>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Email</label>
+                        <div style="font-size: 14px; color: #555; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ecf0f1;">{{ user.email|default:"—" }}</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Phone</label>
+                        <div style="font-size: 14px; color: #555; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ecf0f1;">{{ user.phone|default:"—" }}</div>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Aclone</label>
+                        <div style="font-size: 14px; color: #555; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ecf0f1;">{{ user.address|default:"—" }}</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Company Name</label>
+                        <div style="font-size: 14px; color: #555; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ecf0f1;">{{ user.company_name|default:"—" }}</div>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Address</label>
+                        <div style="font-size: 14px; color: #555; padding: 10px 12px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ecf0f1;">{{ user.address|default:"—" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Tab -->
+        <div id="security" class="settings-tab" style="display: none;">
+            <div style="margin-bottom: 30px;">
+                <h1 style="font-size: 28px; font-weight: 700; color: #2c3e50; margin: 0 0 8px 0;">Security Settings</h1>
+                <p style="color: #7f8c8d; margin: 0; font-size: 13px;">Manage your security preferences and account protection</p>
+            </div>
+
+            <!-- Security Status Section -->
+            <div style="background: white; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                <div style="font-size: 15px; font-weight: 700; color: #2c3e50; margin-bottom: 22px;">Security Status</div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-bottom: 20px;">
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; border-left: 3px solid #007bff;">
+                        <div style="font-size: 11px; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 700;">Last Login</div>
+                        <div style="font-size: 14px; color: #2c3e50; font-weight: 600;">
+                            {% if user.last_login %}
+                                {{ user.last_login|date:"M d, Y" }}
+                            {% else %}
+                                Never logged in
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 12px; color: #27ae60; display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                            <i class="fas fa-check-circle"></i> Active
+                        </div>
+                    </div>
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; border-left: 3px solid #007bff;">
+                        <div style="font-size: 11px; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 700;">Password Guidelines</div>
+                        <div style="font-size: 14px; color: #2c3e50; font-weight: 600;">
+                            {% if user.last_login %}
+                                Updated recently
+                            {% else %}
+                                Set on join
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 12px; color: #27ae60; display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                            <i class="fas fa-check-circle"></i> Active
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
+                    <a href="{% url 'change_password' %}" style="
+                        padding: 10px 24px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        text-decoration: none;
+                        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                        color: white;
+                        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+                        transition: all 0.3s ease;
+                        white-space: nowrap;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0, 123, 255, 0.3)';" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(0, 123, 255, 0.2)';">
+                        <i class="fas fa-key"></i> Change Password
+                    </a>
+                    <a href="{% url 'security_dashboard' %}" style="
+                        padding: 10px 24px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        text-decoration: none;
+                        background: #ecf0f1;
+                        color: #2c3e50;
+                        border: 1px solid #d5dbdb;
+                        transition: all 0.3s ease;
+                        white-space: nowrap;
+                    " onmouseover="this.style.background='#dfe6e9';" onmouseout="this.style.background='#ecf0f1';">
+                        <i class="fas fa-shield-alt"></i> View Security Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div id="notifications" class="settings-tab" style="display: none;">
+            <div style="margin-bottom: 30px;">
+                <h1 style="font-size: 28px; font-weight: 700; color: #2c3e50; margin: 0 0 8px 0;">Notifications</h1>
+                <p style="color: #7f8c8d; margin: 0; font-size: 13px;">Manage your notification preferences</p>
+            </div>
+
+            <div style="background: white; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                <div style="font-size: 15px; font-weight: 700; color: #2c3e50; margin-bottom: 22px;">Coming Soon</div>
+                <p style="color: #95a5a6; font-size: 14px; margin: 0;">Notification preferences will be available soon. You'll be able to customize email notifications for security events and other activities.</p>
+            </div>
+        </div>
+
+        <!-- Billing Tab -->
+        <div id="billing" class="settings-tab" style="display: none;">
+            <div style="margin-bottom: 30px;">
+                <h1 style="font-size: 28px; font-weight: 700; color: #2c3e50; margin: 0 0 8px 0;">Billing</h1>
+                <p style="color: #7f8c8d; margin: 0; font-size: 13px;">Manage your billing information</p>
+            </div>
+
+            <div style="background: white; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                <div style="font-size: 15px; font-weight: 700; color: #2c3e50; margin-bottom: 22px;">Coming Soon</div>
+                <p style="color: #95a5a6; font-size: 14px; margin: 0;">Billing information will be available soon. You'll be able to manage your payment methods and view billing history.</p>
+            </div>
+        </div>
+
+        <!-- User Management Tab (Admin Only) -->
+        {% if user.is_staff %}
+        <div id="users" class="settings-tab" style="display: none;">
+            <div style="margin-bottom: 30px;">
+                <h1 style="font-size: 28px; font-weight: 700; color: #2c3e50; margin: 0 0 8px 0;">User Management</h1>
+                <p style="color: #7f8c8d; margin: 0; font-size: 13px;">View and manage all system users</p>
+            </div>
+
+            <div style="background: white; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid #ecf0f1;">
+                    <div>
+                        <div style="font-size: 15px; font-weight: 700; color: #2c3e50;">System Users</div>
+                        <p style="color: #95a5a6; margin: 4px 0 0 0; font-size: 13px;">Manage and delete users from the system</p>
+                    </div>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div style="
+                            background: #007bff;
+                            color: white;
+                            padding: 8px 16px;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            font-size: 14px;
+                        "><i class="fas fa-users me-2"></i>Total Users: <span id="user-count" style="font-weight: 700;">{{ users|length }}</span></div>
+                        <button id="save-roles-btn" onclick="saveAllRoles()" style="
+                            background: #28a745;
+                            color: white;
+                            border: none;
+                            padding: 8px 20px;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            font-size: 14px;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            display: none;
+                        " onmouseover="this.style.background='#218838'; this.style.transform='scale(1.05)';" onmouseout="this.style.background='#28a745'; this.style.transform='scale(1)';">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div style="overflow-x: auto;">
+                    <table style="
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 13px;
+                    ">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-bottom: 2px solid #ecf0f1;">
+                                <th style="padding: 12px; text-align: left; color: #7f8c8d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
+                                <th style="padding: 12px; text-align: left; color: #7f8c8d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Email</th>
+                                <th style="padding: 12px; text-align: left; color: #7f8c8d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Role</th>
+                                <th style="padding: 12px; text-align: left; color: #7f8c8d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Joined</th>
+                                <th style="padding: 12px; text-align: center; color: #7f8c8d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Audit Trail Tab (Admin Only) -->
+        {% if user.is_staff and user.is_superuser %}
+        <div id="audit-trail" class="settings-tab" style="display: none;">
+            <div style="margin-bottom: 30px;">
+                <h1 style="font-size: 28px; font-weight: 700; color: #2c3e50; margin: 0 0 8px 0;">Audit Trail</h1>
+                <p style="color: #7f8c8d; margin: 0; font-size: 13px;">Monitor all system activities and user actions</p>
+            </div>
+
+            <div style="background: white; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 24px;">
+                    <div>
+                        <div style="font-size: 15px; font-weight: 700; color: #2c3e50; margin-bottom: 6px;">View Complete Activity Log</div>
+                        <p style="color: #6b7280; margin: 0; font-size: 13px;">Access the full audit trail with advanced filtering and search capabilities.</p>
+                    </div>
+                    <a href="{% url 'audit:audit_trail' %}" style="
+                        padding: 12px 28px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.25);
+                        text-decoration: none;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                        color: white;
+                        border: none;
+                        font-size: 13px;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 35px rgba(102, 126, 234, 0.35)';" onmouseout="this.style.transform=''; this.style.boxShadow='0 10px 30px rgba(102, 126, 234, 0.25)';">
+                        <i class="fas fa-arrow-right"></i> View Full Audit Trail
+                    </a>
+                </div>
+
+                <div style="background: #f0f4f8; border-left: 4px solid #007bff; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: #2c3e50; font-weight: 600; margin-bottom: 6px;">📊 Quick Stats</div>
+                    <p style="margin: 0; font-size: 13px; color: #6b7280;">The audit trail captures all create, update, delete, and login/logout activities across the system.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</div>
+
+<!-- Embed users data as JSON -->
+<script id="users-data-script" type="application/json">{{ users_json|safe }}</script>
+
+<script>
+    let currentTab = 'general';
+    let usersData = [];
+    
+    function getCurrentTab() {
+        return currentTab;
+    }
+    
+    // Load users from embedded JSON
+    function initializeUsers() {
+        const usersScript = document.getElementById('users-data-script');
+        if (usersScript && usersScript.textContent) {
+            try {
+                const jsonText = usersScript.textContent.trim();
+                if (jsonText && jsonText !== '[]') {
+                    usersData = JSON.parse(jsonText);
+                    console.log('Loaded users:', usersData.length);
+                }
+            } catch (e) {
+                console.error('Error parsing users data:', e);
+                console.log('Raw content:', usersScript.textContent);
+            }
+        } else {
+            console.log('Users script not found or empty');
+        }
+    }
+    
+    // Render users table
+    function renderUsersTable() {
+        const tbody = document.getElementById('users-table-body');
+        const userCountSpan = document.getElementById('user-count');
+        
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        userCountSpan.textContent = usersData.length;
+        
+        usersData.forEach(user => {
+            const row = document.createElement('tr');
+            row.style.borderBottom = '1px solid #ecf0f1';
+            row.style.transition = 'background 0.2s ease';
+            
+            const isCurrentUser = user.id === {{ user.id }};
+            const isAdmin = user.is_staff;
+            
+            row.onmouseover = function() {
+                this.style.background = '#f8f9fa';
+            };
+            row.onmouseout = function() {
+                this.style.background = '';
+            };
+            
+            let deleteBtn = '';
+            if (!isCurrentUser) {
+                deleteBtn = `
+                    <button onclick="deleteUser(${user.id}, '${user.username}')" style="
+                        background: #dc3545;
+                        color: white;
+                        border: none;
+                        padding: 6px 14px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.background='#c82333'; this.style.transform='scale(1.05)';" onmouseout="this.style.background='#dc3545'; this.style.transform='scale(1)';">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                `;
+            } else {
+                deleteBtn = '<span style="color: #bdc3c7; font-size: 12px;"><i class="fas fa-user"></i> Current User</span>';
+            }
+            
+            const roleColor = isAdmin ? '#007bff' : '#95a5a6';
+            const roleText = isAdmin ? 'Admin' : 'Staff';
+            
+            const joinDate = new Date(user.date_joined).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            // Role selector or badge
+            let roleDisplay = '';
+            if (isCurrentUser) {
+                roleDisplay = `<span style="
+                    background: ${roleColor};
+                    color: white;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    font-weight: 600;
+                    font-size: 11px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                ">${roleText} (You)</span>`;
+            } else {
+                roleDisplay = `
+                    <select data-user-id="${user.id}" class="role-dropdown" onchange="onRoleChanged(${user.id}, this)" style="
+                        padding: 6px 8px;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        background: white;
+                        cursor: pointer;
+                        color: #2c3e50;
+                    ">
+                        <option value="staff" ${!isAdmin ? 'selected' : ''}>Staff</option>
+                        <option value="admin" ${isAdmin ? 'selected' : ''}>Admin</option>
+                    </select>
+                `;
+            }
+            
+            row.innerHTML = `
+                <td style="padding: 12px; vertical-align: middle;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            font-size: 12px;
+                            font-weight: 700;
+                        ">${user.initials}</div>
+                        <div>
+                            <div style="font-weight: 600; color: #2c3e50;">${user.full_name}</div>
+                            <div style="color: #95a5a6; font-size: 12px;">@${user.username}</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 12px; vertical-align: middle; color: #555;">
+                    ${user.email ? `<a href="mailto:${user.email}" style="color: #007bff; text-decoration: none;">${user.email}</a>` : '—'}
+                </td>
+                <td style="padding: 12px; vertical-align: middle;">
+                    ${roleDisplay}
+                </td>
+                <td style="padding: 12px; vertical-align: middle; color: #95a5a6;">
+                    ${joinDate}
+                </td>
+                <td style="padding: 12px; vertical-align: middle; text-align: center;">
+                    ${deleteBtn}
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+    
+    function deleteUser(userId, username) {
+        if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+            const url = `{% url 'delete_user' user_id=0 %}`.replace('0', userId);
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    // Remove user from local data
+                    usersData = usersData.filter(u => u.id !== userId);
+                    renderUsersTable();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the user.');
+            });
+        }
+    }
+    
+    let roleChanges = {}; // Track role changes
+    
+    function onRoleChanged(userId, selectElement) {
+        const newRole = selectElement.value;
+        roleChanges[userId] = newRole;
+        
+        // Show Save button
+        document.getElementById('save-roles-btn').style.display = 'inline-block';
+        
+        // Highlight the dropdown
+        selectElement.style.borderColor = '#ffc107';
+        selectElement.style.backgroundColor = '#fffbea';
+    }
+    
+    function saveAllRoles() {
+        if (Object.keys(roleChanges).length === 0) {
+            alert('No changes to save.');
+            return;
+        }
+        
+        const saveBtn = document.getElementById('save-roles-btn');
+        saveBtn.disabled = true;
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+        
+        let saveCount = 0;
+        let errorCount = 0;
+        let totalChanges = Object.keys(roleChanges).length;
+        
+        Object.keys(roleChanges).forEach(userId => {
+            const newRole = roleChanges[userId];
+            const user = usersData.find(u => u.id === parseInt(userId));
+            
+            if (!user) {
+                errorCount++;
+                if (saveCount + errorCount === totalChanges) {
+                    completeRoleSave(saveCount, errorCount, saveBtn, originalText);
+                }
+                return;
+            }
+            
+            const url = `{% url 'update_user_role' user_id=0 %}`.replace('0', userId);
+            const formData = new FormData();
+            formData.append('role', newRole);
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const userIndex = usersData.findIndex(u => u.id === parseInt(userId));
+                    if (userIndex !== -1) {
+                        usersData[userIndex].is_staff = data.is_staff;
+                    }
+                    saveCount++;
+                } else {
+                    console.error('Error:', data.error);
+                    errorCount++;
+                }
+                
+                if (saveCount + errorCount === totalChanges) {
+                    completeRoleSave(saveCount, errorCount, saveBtn, originalText);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorCount++;
+                
+                if (saveCount + errorCount === totalChanges) {
+                    completeRoleSave(saveCount, errorCount, saveBtn, originalText);
+                }
+            });
+        });
+    }
+    
+    function completeRoleSave(saveCount, errorCount, saveBtn, originalText) {
+        if (errorCount === 0) {
+            alert(`✓ Successfully saved ${saveCount} role change(s)!`);
+            roleChanges = {};
+            renderUsersTable();
+            saveBtn.style.display = 'none';
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+        } else {
+            alert(`Saved ${saveCount} change(s) with ${errorCount} error(s). Please try again.`);
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+            if (saveCount > 0) {
+                renderUsersTable();
+            }
+        }
+    }
+    
+    function changeUserRole(userId, newRole, username) {
+        const confirmMsg = `Change ${username}'s role to ${newRole.toUpperCase()}?`;
+        
+        if (confirm(confirmMsg)) {
+            const url = `{% url 'update_user_role' user_id=0 %}`.replace('0', userId);
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: new FormData(Object.assign(document.createElement('form'), {
+                    elements: {
+                        'role': {value: newRole}
+                    }
+                }))
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update user data locally
+                    const userIndex = usersData.findIndex(u => u.id === userId);
+                    if (userIndex !== -1) {
+                        usersData[userIndex].is_staff = data.is_staff;
+                    }
+                    
+                    alert(data.message);
+                    renderUsersTable();
+                } else {
+                    alert('Error: ' + data.error);
+                    renderUsersTable(); // Re-render to reset dropdown
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the user role.');
+                renderUsersTable(); // Re-render to reset dropdown
+            });
+        } else {
+            renderUsersTable(); // Re-render to reset dropdown if cancelled
+        }
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const tabName = this.getAttribute('data-tab');
+            currentTab = tabName;
+            
+            // Save current tab to localStorage
+            localStorage.setItem('settingsCurrentTab', tabName);
+            
+            // Update URL hash
+            window.history.pushState(null, '', '#' + tabName);
+            
+            // Hide all tabs
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).style.display = 'block';
+            
+            // Update active link styling
+            document.querySelectorAll('.nav-link').forEach(l => {
+                l.style.background = '';
+                l.style.color = '#666';
+                l.style.fontWeight = '500';
+                l.style.borderLeftColor = 'transparent';
+            });
+            
+            this.style.background = '#e8f0ff';
+            this.style.color = '#007bff';
+            this.style.fontWeight = '600';
+            this.style.borderLeftColor = '#007bff';
+            
+            // Render users table if switching to users tab
+            if (tabName === 'users' && usersData.length === 0) {
+                renderUsersTable();
+            }
+        });
+    });
+    
+    function switchToTab(tabName) {
+        const link = document.querySelector(`[data-tab="${tabName}"]`);
+        if (link) {
+            link.click();
+        }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Page loaded, initializing users...');
+        initializeUsers();
+        console.log('Users data length:', usersData.length);
+        console.log('Users data:', usersData);
+        
+        // Try rendering immediately if we have data
+        if (usersData && usersData.length > 0) {
+            console.log('Rendering users table with', usersData.length, 'users');
+            renderUsersTable();
+        } else {
+            console.log('No users data available');
+            // Try to get the raw JSON from the script tag
+            const scriptTag = document.getElementById('users-data-script');
+            if (scriptTag) {
+                console.log('Script tag content:', scriptTag.textContent.substring(0, 100));
+            }
+        }
+        
+        // Restore current tab from localStorage or URL hash
+        let tabToShow = localStorage.getItem('settingsCurrentTab') || 'general';
+        
+        // Check URL hash first (takes priority)
+        if (window.location.hash) {
+            tabToShow = window.location.hash.substring(1);
+        }
+        
+        // Check query parameter for backward compatibility
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('tab')) {
+            tabToShow = urlParams.get('tab');
+        }
+        
+        switchToTab(tabToShow);
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>POS Test</title>
+</head>
+<body>
+    <h1>POS Transaction Test</h1>
+    <button onclick="testTransaction()">Test Transaction</button>
+    <div id="output" style="margin-top: 20px; white-space: pre-wrap; font-family: monospace;"></div>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function log(message) {
+            const output = document.getElementById('output');
+            output.textContent += message + '\n';
+            console.log(message);
+        }
+
+        function testTransaction() {
+            document.getElementById('output').textContent = '';
+            
+            log('=== Starting Test ===');
+            
+            const testData = {
+                items: [
+                    {
+                        product_id: 4,
+                        quantity: 1,
+                        price: 150.00
+                    }
+                ],
+                customer_name: 'Test Customer'
+            };
+            
+            log('Test data: ' + JSON.stringify(testData, null, 2));
+            log('URL: /sales/api/process-transaction/');
+            
+            const csrfToken = getCookie('csrftoken');
+            log('CSRF Token: ' + (csrfToken ? 'Found' : 'NOT FOUND'));
+            
+            fetch('/sales/api/process-transaction/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken || ''
+                },
+                body: JSON.stringify(testData)
+            })
+            .then(response => {
+                log('\n=== Response ===');
+                log('Status: ' + response.status);
+                log('OK: ' + response.ok);
+                return response.text();
+            })
+            .then(text => {
+                log('\n=== Response Body ===');
+                log(text);
+                
+                try {
+                    const json = JSON.parse(text);
+                    log('\n=== Parsed JSON ===');
+                    log(JSON.stringify(json, null, 2));
+                } catch (e) {
+                    log('Could not parse as JSON');
+                }
+            })
+            .catch(error => {
+                log('\n=== ERROR ===');
+                log('Error: ' + error.message);
+                log('Stack: ' + error.stack);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Audit Trail - Multibliz POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5" style="background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(250, 250, 250, 0.98)); min-height: calc(100vh - 140px);">
+    <div class="container-lg" style="max-width: 1400px;">
+        <!-- Header -->
+        <div style="margin-bottom: 40px;">
+            <div style="display: flex; align-items: start; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+                <div>
+                    <h1 style="font-size: 32px; font-weight: 700; color: #1f2937; margin: 0 0 8px 0; display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-history" style="color: #667eea;"></i>Audit Trail
+                    </h1>
+                    <p style="color: #6b7280; margin: 0; font-size: 14px; max-width: 600px;">
+                        Complete activity log tracking all system changes, user actions, login/logout events, and data modifications across all modules.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <a href="{% url 'account_settings' %}" style="
+                        padding: 10px 20px;
+                        border-radius: 8px;
+                        text-decoration: none;
+                        border: 1px solid #e5e7eb;
+                        background: white;
+                        color: #6b7280;
+                        font-weight: 600;
+                        font-size: 13px;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                    ">
+                        <i class="fas fa-arrow-left"></i> Back to Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb;">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Username</label>
+                    <input type="text" name="user" value="{{ user_filter|default:'' }}" class="form-control" placeholder="Filter by username" style="border-radius: 6px; border: 1px solid #e5e7eb;" />
+                </div>
+
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Action Type</label>
+                    <select name="action" class="form-select" style="border-radius: 6px; border: 1px solid #e5e7eb;">
+                        <option value="">All Actions</option>
+                        {% for action in actions %}
+                            <option value="{{ action }}" {% if action == action_filter %}selected{% endif %}>{{ action }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: block;">Search</label>
+                    <input type="text" name="search" value="{{ search|default:'' }}" class="form-control" placeholder="Search activities..." style="border-radius: 6px; border: 1px solid #e5e7eb;" />
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 600; flex: 1;">
+                        <i class="fas fa-filter me-2"></i>Filter
+                    </button>
+                    <a href="{% url 'audit:audit_trail' %}" class="btn btn-outline-secondary" style="border-radius: 6px; font-weight: 600;">
+                        <i class="fas fa-redo me-2"></i>Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Activity Table -->
+        <div style="background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb; overflow: hidden;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px 24px; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h2 style="font-size: 18px; font-weight: 700; margin: 0 0 4px 0;">Activity Log</h2>
+                        <p style="color: rgba(255, 255, 255, 0.9); margin: 0; font-size: 13px;">Total entries: <strong>{{ total_logs }}</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div style="overflow-x: auto;">
+                <table class="table table-hover mb-0" style="border-collapse: collapse;">
+                    <thead style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                        <tr>
+                            <th scope="col" style="padding: 16px 20px; text-align: left; font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Timestamp</th>
+                            <th scope="col" style="padding: 16px 20px; text-align: left; font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">User</th>
+                            <th scope="col" style="padding: 16px 20px; text-align: left; font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Action</th>
+                            <th scope="col" style="padding: 16px 20px; text-align: left; font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Object</th>
+                            <th scope="col" style="padding: 16px 20px; text-align: left; font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Description</th>
+                            <th scope="col" style="padding: 16px 20px; text-align: left; font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if logs %}
+                            {% for log in logs %}
+                                <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s ease;" onmouseover="this.style.background='#f8f9fa';" onmouseout="this.style.background='';">
+                                    <td style="padding: 14px 20px; font-size: 13px; color: #2c3e50; font-weight: 500;">
+                                        <span style="white-space: nowrap;">{{ log.timestamp|date:'M d, Y H:i:s' }}</span>
+                                    </td>
+                                    <td style="padding: 14px 20px; font-size: 13px;">
+                                        {% if log.user %}
+                                            <div style="display: inline-flex; align-items: center; gap: 8px;">
+                                                <div style="
+                                                    width: 32px;
+                                                    height: 32px;
+                                                    border-radius: 50%;
+                                                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                                    display: flex;
+                                                    align-items: center;
+                                                    justify-content: center;
+                                                    color: white;
+                                                    font-size: 11px;
+                                                    font-weight: 700;
+                                                ">{{ log.user.first_name|first|upper }}{{ log.user.last_name|first|upper }}</div>
+                                                <div>
+                                                    <div style="font-weight: 600; color: #2c3e50;">{{ log.user.get_full_name|default:log.user.username }}</div>
+                                                    <small style="color: #9ca3af;">@{{ log.user.username }}</small>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <span style="color: #9ca3af; font-style: italic;">System</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="padding: 14px 20px; font-size: 13px;">
+                                        {% with action=log.get_action_display %}
+                                            {% if action == 'Created' %}
+                                                <span style="background: #d1fae5; color: #047857; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 11px; text-transform: uppercase;">✓ {{ action }}</span>
+                                            {% elif action == 'Updated' %}
+                                                <span style="background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 11px; text-transform: uppercase;">⟳ {{ action }}</span>
+                                            {% elif action == 'Deleted' %}
+                                                <span style="background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 11px; text-transform: uppercase;">✕ {{ action }}</span>
+                                            {% elif action == 'Logged In' %}
+                                                <span style="background: #f3e8ff; color: #6b21a8; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 11px; text-transform: uppercase;">→ {{ action }}</span>
+                                            {% elif action == 'Logged Out' %}
+                                                <span style="background: #fed7aa; color: #92400e; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 11px; text-transform: uppercase;">← {{ action }}</span>
+                                            {% else %}
+                                                <span style="background: #f3f4f6; color: #6b7280; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 11px; text-transform: uppercase;">{{ action }}</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td style="padding: 14px 20px; font-size: 13px; color: #2c3e50;">
+                                        <strong>{{ log.object_name|truncatewords:3 }}</strong><br>
+                                        {% if log.content_type %}<small style="color: #9ca3af;">{{ log.content_type }}</small>{% endif %}
+                                    </td>
+                                    <td style="padding: 14px 20px; font-size: 13px; color: #6b7280;">
+                                        {{ log.description|truncatewords:10 }}
+                                    </td>
+                                    <td style="padding: 14px 20px; font-size: 13px; color: #6b7280; font-family: monospace;">
+                                        {% if log.ip_address %}<code>{{ log.ip_address }}</code>{% else %}—{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" style="padding: 40px 20px; text-align: center; color: #9ca3af; font-size: 14px;">
+                                    <i class="fas fa-inbox fa-3x" style="margin-bottom: 12px; opacity: 0.3;"></i>
+                                    <p style="margin: 12px 0 0 0;">No audit entries found.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if logs.has_other_pages %}
+            <div style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <small style="color: #6b7280;">
+                    Showing {{ logs.start_index }} - {{ logs.end_index }} of {{ total_logs }} entries
+                </small>
+                <nav>
+                    <ul class="pagination mb-0" style="flex-wrap: wrap;">
+                        {% if logs.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if user_filter %}user={{ user_filter }}&{% endif %}{% if action_filter %}action={{ action_filter }}&{% endif %}{% if search %}search={{ search }}&{% endif %}page={{ logs.previous_page_number }}">← Previous</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">← Previous</span></li>
+                        {% endif %}
+
+                        {% for p in logs.paginator.page_range %}
+                            {% if logs.number == p %}
+                                <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                            {% elif p > logs.number|add:'-3' and p < logs.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?{% if user_filter %}user={{ user_filter }}&{% endif %}{% if action_filter %}action={{ action_filter }}&{% endif %}{% if search %}search={{ search }}&{% endif %}page={{ p }}">{{ p }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if logs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if user_filter %}user={{ user_filter }}&{% endif %}{% if action_filter %}action={{ action_filter }}&{% endif %}{% if search %}search={{ search }}&{% endif %}page={{ logs.next_page_number }}">Next →</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Next →</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

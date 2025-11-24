@@ -1,0 +1,597 @@
+{% extends 'base.html' %}
+
+{% block title %}Forecasting - Multibliz POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="display-5 fw-bold mb-2">AI-Powered Forecasting</h1>
+            <p class="text-muted fs-6">Predictive analytics for inventory optimization</p>
+        </div>
+        <button onclick="generateForecasts()" class="btn btn-warning btn-lg px-5" id="generateBtn">
+            <i class="fas fa-brain me-2"></i>Generate Forecasts
+        </button>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="alert alert-info" style="display:none;">
+        <div class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <span>Generating forecasts... This may take a few moments.</span>
+    </div>
+
+    <!-- Status Message -->
+    <div id="statusMessage" class="alert" style="display:none;"></div>
+
+    {% if object_list %}
+        <!-- Forecast Chart with Summary -->
+        <div class="row g-4 mb-5">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-chart-line text-primary fs-6"></i>
+                                <div>
+                                    <h5 class="mb-0 fw-bold">Predictive Sales Forecast (Next 30 Days)</h5>
+                                    <small class="text-muted">Based on historical sales data</small>
+                                </div>
+                            </div>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <input type="radio" class="btn-check" name="chartScale" id="scaleAuto" autocomplete="off" checked>
+                                <label class="btn btn-outline-primary" for="scaleAuto" onclick="updateChartScale('auto')">
+                                    <i class="fas fa-expand-arrows-alt me-1"></i>Auto
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="chartScale" id="scaleForecast" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="scaleForecast" onclick="updateChartScale('forecast')">
+                                    <i class="fas fa-brain me-1"></i>Forecast
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="chartScale" id="scaleLog" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="scaleLog" onclick="updateChartScale('logarithmic')">
+                                    <i class="fas fa-chart-area me-1"></i>Log
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div style="position: relative; height: 400px;">
+                            <canvas id="forecastChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100 overflow-hidden">
+                    <div class="card-body p-4" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);">
+                        <div class="text-center">
+                            <i class="fas fa-sparkles fs-1 text-primary mb-3" style="opacity: 0.7;"></i>
+                            <h6 class="text-muted mb-2 fw-bold text-uppercase">AI Prediction Summary</h6>
+                            <h2 class="fw-bold mb-2" style="color: #8b5cf6;">~<span id="totalForecast">129</span> Units</h2>
+                            <div class="mb-4 p-3 rounded-2" style="background: rgba(34, 197, 94, 0.1);">
+                                <small class="text-muted d-block mb-1">Total Projected Revenue</small>
+                                <h4 class="fw-bold mb-0 text-success">₱{{ total_projected_revenue|floatformat:2 }}</h4>
+                            </div>
+                            <hr class="my-4" style="border-color: rgba(139, 92, 246, 0.3);">
+                            <div class="small">
+                                <div class="mb-3 p-3 rounded-2" style="background: rgba(139, 92, 246, 0.05);">
+                                    <i class="fas fa-chart-line text-success me-2"></i>
+                                    <span class="text-muted">AI-Powered Prediction</span>
+                                </div>
+                                <div class="mb-3 p-3 rounded-2" style="background: rgba(99, 102, 241, 0.05);">
+                                    <i class="fas fa-robot text-primary me-2"></i>
+                                    <span class="text-muted">Prophet & XGBoost</span>
+                                </div>
+                                <div class="p-3 rounded-2" style="background: rgba(236, 72, 153, 0.05);">
+                                    <i class="fas fa-calendar text-danger me-2"></i>
+                                    <span class="text-muted">Based on Recent Data</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forecast Cards Grid -->
+        <div class="mb-5">
+            <div class="col-12">
+                <h5 class="fw-bold mb-4">
+                    <i class="fas fa-layer-group me-2 text-primary"></i>Forecast Predictions
+                </h5>
+            </div>
+            <div style="max-height: 600px; overflow-y: auto; padding-right: 10px;">
+                <div class="row g-4">
+                    {% for forecast in object_list %}
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="card border-0 shadow-sm h-100 forecast-card" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(96, 165, 250, 0.05) 100%); border-left: 4px solid #2563eb;">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ forecast.product.name }}</h6>
+                                    <small class="text-muted d-block">{{ forecast.forecast_date|date:"M d, Y" }}</small>
+                                </div>
+                                <span class="badge bg-primary text-white fw-bold">
+                                    {% if forecast.algorithm_used == 'xgboost' %}
+                                        High
+                                    {% else %}
+                                        Medium
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <hr class="my-3" style="border-color: rgba(37, 99, 235, 0.2);">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div>
+                                    <small class="text-muted d-block">Predicted Quantity</small>
+                                    <h4 class="fw-bold mb-0" style="color: #2563eb;">{{ forecast.predicted_quantity }} units</h4>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">Algorithm</small>
+                                    <span class="badge bg-info text-white">{{ forecast.algorithm_used|upper }}</span>
+                                </div>
+                            </div>
+                            <div class="p-2 rounded-2" style="background: rgba(34, 197, 94, 0.1);">
+                                <small class="text-muted d-block">Projected Revenue</small>
+                                <h5 class="fw-bold mb-0 text-success">₱{{ forecast.predicted_revenue|floatformat:2 }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Forecast Table -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom p-4">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-table text-primary fs-6"></i>
+                    <h5 class="mb-0 fw-bold">Detailed Forecast Results</h5>
+                </div>
+            </div>
+            <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;">
+                <table class="table table-hover mb-0 align-middle" id="forecastTable" style="table-layout: fixed;">
+                    <thead class="border-bottom bg-light sticky-top">
+                        <tr>
+                            <th class="ps-4 fw-bold text-muted" style="width: 20%;">Product</th>
+                            <th class="fw-bold text-muted" style="width: 15%;">Forecast Date</th>
+                            <th class="fw-bold text-muted text-end" style="width: 15%;">Predicted Units</th>
+                            <th class="fw-bold text-muted text-end" style="width: 20%;">Projected Revenue</th>
+                            <th class="fw-bold text-muted text-center" style="width: 15%;">Algorithm</th>
+                            <th class="fw-bold text-muted text-center pe-4" style="width: 15%;">Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for forecast in object_list %}
+                            <tr class="border-bottom-light">
+                                <td class="ps-4" style="width: 20%; word-wrap: break-word;">
+                                    <span class="fw-500">{{ forecast.product.name }}</span>
+                                </td>
+                                <td style="width: 15%;">
+                                    <small class="text-muted">{{ forecast.forecast_date|date:"M d, Y" }}</small>
+                                </td>
+                                <td class="text-end" style="width: 15%;">
+                                    <span class="badge bg-primary text-white fw-bold" style="font-size: 0.95rem;">
+                                        {{ forecast.predicted_quantity }}
+                                    </span>
+                                </td>
+                                <td class="text-end" style="width: 20%;">
+                                    <span class="fw-bold text-success">₱{{ forecast.predicted_revenue|floatformat:2 }}</span>
+                                </td>
+                                <td style="width: 15%;" class="text-center">
+                                    {% if forecast.algorithm_used == 'xgboost' %}
+                                        <span class="badge" style="background: #2563eb;">XGBoost</span>
+                                    {% else %}
+                                        <span class="badge" style="background: #8b5cf6;">Prophet</span>
+                                    {% endif %}
+                                </td>
+                                <td style="width: 15%;" class="text-center pe-4">
+                                    {% if forecast.algorithm_used == 'xgboost' %}
+                                        <span class="badge bg-success">High</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Medium</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="d-flex justify-content-center mt-4">
+            <nav aria-label="Forecast pagination">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-chart-line fa-4x text-muted mb-4" style="opacity: 0.5;"></i>
+            <h4 class="fw-bold text-muted mb-2">No forecasts available</h4>
+            <p class="text-muted fs-6 mb-4">Generate AI-powered forecasts to predict future sales and inventory needs.</p>
+            <button onclick="generateForecasts()" class="btn btn-warning btn-lg">
+                <i class="fas fa-wand-magic-sparkles me-2"></i>Generate First Forecast
+            </button>
+        </div>
+    {% endif %}
+
+    <!-- Information Section -->
+    <div class="row g-4 mt-5">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom p-4">
+                    <i class="fas fa-info-circle text-primary me-2"></i>
+                    <h6 class="mb-0 fw-bold d-inline">About Forecasting</h6>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-3">
+                        Our AI forecasting uses advanced machine learning algorithms to analyze historical sales data and predict future demand patterns.
+                    </p>
+                    <ul class="small text-muted mb-0">
+                        <li><strong>XGBoost:</strong> High-accuracy gradient boosting algorithm</li>
+                        <li><strong>Prophet:</strong> Time series forecasting optimized for business data</li>
+                        <li><strong>Ensemble:</strong> Combines multiple models for robust predictions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom p-4">
+                    <i class="fas fa-graduation-cap text-primary me-2"></i>
+                    <h6 class="mb-0 fw-bold d-inline">How to Use</h6>
+                </div>
+                <div class="card-body p-4">
+                    <ol class="small text-muted mb-0">
+                        <li class="mb-2">Ensure you have sufficient sales data for products</li>
+                        <li class="mb-2">Click "Generate Forecasts" to run AI analysis</li>
+                        <li class="mb-2">Review predictions and confidence levels</li>
+                        <li>Use insights to optimize stock levels and reduce costs</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+// Historical sales data from backend
+const historicalSalesData = {{ historical_sales_json|safe|default:"[]" }};
+const forecastDataFromBackend = {{ forecast_data_json|safe|default:"[]" }};
+
+// Global chart instance
+let forecastChartInstance = null;
+let currentScale = 'auto';
+
+// Initialize forecast chart
+function initializeChart() {
+    const ctx = document.getElementById('forecastChart');
+    if (!ctx) return;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Build forecast data from backend aggregated data
+    let forecastsByDate = {};
+    let forecastsByAlgorithm = { xgboost: {}, prophet: {} };
+    let totalQuantity = 0;
+    
+    forecastDataFromBackend.forEach(item => {
+        const date = new Date(item.forecast_date);
+        const dateKey = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const quantity = item.total_quantity;
+        
+        forecastsByDate[dateKey] = (forecastsByDate[dateKey] || 0) + quantity;
+        
+        if (item.algorithm_used === 'xgboost') {
+            forecastsByAlgorithm.xgboost[dateKey] = quantity;
+        } else if (item.algorithm_used === 'prophet') {
+            forecastsByAlgorithm.prophet[dateKey] = quantity;
+        }
+        
+        totalQuantity += quantity;
+    });
+    
+    console.log('Total forecast quantity:', totalQuantity);
+    console.log('Forecasts by date:', forecastsByDate);
+    console.log('XGBoost forecasts:', forecastsByAlgorithm.xgboost);
+    console.log('Prophet forecasts:', forecastsByAlgorithm.prophet);
+    
+    // Get real historical sales data from backend
+    const historicalData = [];
+    const historicalLabels = [];
+    const historicalByDate = {};
+    
+    if (historicalSalesData && historicalSalesData.length > 0) {
+        historicalSalesData.forEach(item => {
+            const date = new Date(item.sale_date__date);
+            const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            historicalByDate[label] = item.total_quantity;
+        });
+    }
+    
+    // Create labels and data for last 30 days (historical)
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        historicalLabels.push(label);
+        historicalData.push(historicalByDate[label] || 0);
+    }
+    
+    // Create labels and data for next 30 days (forecasts)
+    const forecastLabels = [];
+    const forecastData = [];
+    const xgboostData = [];
+    const prophetData = [];
+    
+    for (let i = 0; i < 30; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() + i);
+        const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        forecastLabels.push(label);
+        forecastData.push(forecastsByDate[label] || 0);
+        xgboostData.push(forecastsByAlgorithm.xgboost[label] || 0);
+        prophetData.push(forecastsByAlgorithm.prophet[label] || 0);
+    }
+    
+    // Combine all labels
+    const allLabels = [...historicalLabels, ...forecastLabels];
+    const combinedHistorical = [...historicalData, ...Array(30).fill(null)];
+    const combinedForecast = [...Array(30).fill(null), ...forecastData];
+    const combinedXGBoost = [...Array(30).fill(null), ...xgboostData];
+    const combinedProphet = [...Array(30).fill(null), ...prophetData];
+    
+    // Calculate total forecast from actual data
+    const totalForecast = totalQuantity > 0 ? totalQuantity : forecastData.reduce((sum, val) => sum + val, 0);
+    
+    // Update the total forecast display
+    document.getElementById('totalForecast').textContent = (totalForecast || 0).toFixed(0);
+    
+    // Destroy existing chart if it exists
+    if (forecastChartInstance) {
+        forecastChartInstance.destroy();
+    }
+    
+    // Store chart configuration data globally for scale updates
+    window.chartData = {
+        allLabels,
+        combinedHistorical,
+        combinedForecast,
+        combinedXGBoost,
+        combinedProphet
+    };
+    
+    forecastChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: allLabels,
+            datasets: [
+                {
+                    label: 'Historical Sales',
+                    data: combinedHistorical,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#2563eb',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 1,
+                    tension: 0.4,
+                    fill: false,
+                    yAxisID: 'y',
+                },
+                {
+                    label: 'XGBoost Forecast',
+                    data: combinedXGBoost,
+                    borderColor: '#f97316',
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#f97316',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 1,
+                    tension: 0.4,
+                    fill: false,
+                    yAxisID: 'y',
+                    borderDash: [5, 5],
+                },
+                {
+                    label: 'Prophet Forecast',
+                    data: combinedProphet,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#8b5cf6',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 1,
+                    tension: 0.4,
+                    fill: false,
+                    yAxisID: 'y',
+                    borderDash: [5, 5],
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15,
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                title: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const index = context[0].dataIndex;
+                            if (index < 30) {
+                                return 'Historical: ' + context[0].label;
+                            } else {
+                                return 'Forecast: ' + context[0].label;
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: currentScale === 'logarithmic' ? 'logarithmic' : 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: currentScale !== 'logarithmic',
+                    title: {
+                        display: true,
+                        text: 'Quantity (Units)' + (currentScale === 'logarithmic' ? ' (Log Scale)' : ''),
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ...(currentScale === 'forecast' && {
+                        max: Math.max(...forecastData) * 1.2,
+                        suggestedMax: Math.max(...forecastData) * 1.2
+                    })
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        font: {
+                            size: 9
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Function to update chart scale
+function updateChartScale(scale) {
+    currentScale = scale;
+    initializeChart();
+}
+
+// Initialize chart on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChart();
+});
+
+function generateForecasts() {
+    const generateBtn = document.getElementById('generateBtn');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const statusMessage = document.getElementById('statusMessage');
+    
+    // Disable button and show loading
+    generateBtn.disabled = true;
+    loadingIndicator.style.display = 'block';
+    statusMessage.style.display = 'none';
+    
+    // Call the API
+    fetch("{% url 'forecast_generate' %}", {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadingIndicator.style.display = 'none';
+        
+        if (data.error) {
+            // Show error
+            statusMessage.className = 'alert alert-danger';
+            statusMessage.innerHTML = '<strong>Error:</strong> ' + data.error;
+            statusMessage.style.display = 'block';
+        } else {
+            // Show success message
+            statusMessage.className = 'alert alert-success';
+            let errorMsg = '';
+            if (data.errors && data.errors.length > 0) {
+                errorMsg = '<br><small>' + data.errors.join('<br>') + '</small>';
+            }
+            statusMessage.innerHTML = '<strong>Success!</strong> ' + data.message + errorMsg;
+            statusMessage.style.display = 'block';
+            
+            // Reload page after 2 seconds to show new forecasts
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        }
+        
+        generateBtn.disabled = false;
+    })
+    .catch(error => {
+        loadingIndicator.style.display = 'none';
+        statusMessage.className = 'alert alert-danger';
+        statusMessage.innerHTML = '<strong>Error:</strong> ' + error.message;
+        statusMessage.style.display = 'block';
+        generateBtn.disabled = false;
+    });
+}
+</script>
+{% endblock %}

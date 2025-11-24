@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory - Multibliz POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="display-5 fw-bold mb-2">Inventory Management</h1>
+            <p class="text-muted fs-6">Monitor and manage stock levels</p>
+        </div>
+        <a href="{% url 'stock_create' %}" class="btn btn-warning btn-lg px-4">
+            <i class="fas fa-plus me-2"></i>Add Stock
+        </a>
+    </div>
+
+    {% if object_list %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom p-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <i class="fas fa-warehouse text-primary fs-6"></i>
+                    <h5 class="mb-0 fw-bold">Stock Levels</h5>
+                    <span class="badge bg-secondary ms-auto">{{ object_list|length }} items</span>
+                </div>
+                <div class="position-relative" style="max-width: 400px;">
+                    <input 
+                        type="text" 
+                        id="productSearch" 
+                        class="form-control form-control-lg" 
+                        placeholder="Search products by name..."
+                        style="padding-left: 38px; border-radius: 8px; border: 1.5px solid #e5e7eb;"
+                    />
+                    <i class="fas fa-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px;"></i>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="stockTable" data-sortable="true" data-toggleable="true">
+                        <thead>
+                            <tr>
+                                <th data-column="product" data-sortable="true">Product</th>
+                                <th data-column="supplier" data-sortable="true">Supplier</th>
+                                <th data-column="quantity" data-sortable="true">Quantity</th>
+                                <th data-column="reorder" data-sortable="true">Reorder Level</th>
+                                <th data-column="status" data-sortable="true">Status</th>
+                                <th data-column="actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in object_list %}
+                                {% if stock.quantity <= stock.reorder_level %}
+                                    <tr class="table-row-critical">
+                                {% elif stock.quantity <= stock.reorder_level|add:15 %}
+                                    <tr class="table-row-warning">
+                                {% else %}
+                                    <tr class="table-row-healthy">
+                                {% endif %}
+                                    <td data-column="product">
+                                        <span class="status-indicator-dot {% if stock.quantity <= stock.reorder_level %}status-critical{% elif stock.quantity <= stock.reorder_level|add:15 %}status-warning{% else %}status-healthy{% endif %}"></span>
+                                        <strong>{{ stock.product.name }}</strong>
+                                    </td>
+                                    <td data-column="supplier">{{ stock.supplier.name }}</td>
+                                    <td data-column="quantity" class="fw-bold text-primary">{{ stock.quantity }} units</td>
+                                    <td data-column="reorder">
+                                        <span class="badge bg-light text-dark">{{ stock.reorder_level }}</span>
+                                    </td>
+                                    <td data-column="status">
+                                        {% if stock.quantity <= stock.reorder_level %}
+                                            <span class="badge status-badge status-badge-critical">
+                                                <i class="fas fa-circle-exclamation me-1"></i>CRITICAL
+                                            </span>
+                                        {% elif stock.quantity <= stock.reorder_level|add:15 %}
+                                            <span class="badge status-badge status-badge-warning">
+                                                <i class="fas fa-triangle-exclamation me-1"></i>REORDER
+                                            </span>
+                                        {% else %}
+                                            <span class="badge status-badge status-badge-healthy">
+                                                <i class="fas fa-check-circle me-1"></i>HEALTHY
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-column="actions">
+                                        <a href="{% url 'stock_update' stock.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if user.is_admin %}
+                                            <a href="{% url 'stock_delete' stock.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-boxes fa-4x text-muted mb-4" style="opacity: 0.5;"></i>
+            <h4 class="fw-bold text-muted mb-2">No inventory records found</h4>
+            <p class="text-muted fs-6 mb-4">Create your first inventory record to get started.</p>
+            <a href="{% url 'stock_create' %}" class="btn btn-warning btn-lg">
+                <i class="fas fa-plus me-2"></i>Add First Stock Record
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('productSearch');
+    const table = document.getElementById('stockTable');
+    
+    if (searchInput && table) {
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            const rows = table.querySelectorAll('tbody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const productCell = row.querySelector('[data-column="product"]');
+                if (productCell) {
+                    const productName = productCell.textContent.toLowerCase();
+                    
+                    if (productName.includes(searchTerm) || searchTerm === '') {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+            
+            // Show/hide "no results" message if needed
+            let noResultsRow = table.querySelector('tbody tr.no-results');
+            if (visibleCount === 0 && searchTerm !== '') {
+                if (!noResultsRow) {
+                    noResultsRow = document.createElement('tr');
+                    noResultsRow.className = 'no-results';
+                    noResultsRow.innerHTML = `<td colspan="6" class="text-center py-4 text-muted">No products found matching "${searchTerm}"</td>`;
+                    table.querySelector('tbody').appendChild(noResultsRow);
+                }
+                noResultsRow.style.display = '';
+            } else if (noResultsRow) {
+                noResultsRow.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}Suppliers - Multibliz POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold mb-1" style="color: #111827;">
+                        <i class="fas fa-truck-field text-primary me-2"></i>Suppliers
+                    </h1>
+                    <p class="text-muted mb-0">Manage your supplier directory and partnerships</p>
+                </div>
+                <a href="{% url 'supplier_create' %}" 
+                   class="btn btn-lg fw-bold shadow-sm border-0" 
+                   style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; border-radius: 12px; padding: 12px 32px; transition: all 0.3s ease;"
+                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(6, 182, 212, 0.4)';"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';">
+                    <i class="fas fa-plus me-2"></i>Add New Supplier
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if object_list %}
+        <!-- Suppliers Card -->
+        <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+            <div class="card-header border-0 bg-white py-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center justify-content-center" 
+                             style="width: 48px; height: 48px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 12px;">
+                            <i class="fas fa-address-book text-primary fs-5"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h5 class="mb-0 fw-bold" style="color: #111827;">Supplier Directory</h5>
+                            <small class="text-muted">{{ object_list|length }} supplier{{ object_list|length|pluralize }} registered</small>
+                        </div>
+                    </div>
+                    <div class="input-group" style="max-width: 300px;">
+                        <span class="input-group-text border-0 bg-light">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" id="searchSupplier" class="form-control border-0 bg-light" placeholder="Search suppliers..." style="border-radius: 0 8px 8px 0;">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle" style="border-collapse: separate; border-spacing: 0;">
+                        <thead style="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);">
+                            <tr>
+                                <th class="py-3 px-4 fw-bold" style="color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e5e7eb;">
+                                    <i class="fas fa-building me-2"></i>Name
+                                </th>
+                                <th class="py-3 px-4 fw-bold" style="color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e5e7eb;">
+                                    <i class="fas fa-user me-2"></i>Contact Person
+                                </th>
+                                <th class="py-3 px-4 fw-bold" style="color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e5e7eb;">
+                                    <i class="fas fa-envelope me-2"></i>Email
+                                </th>
+                                <th class="py-3 px-4 fw-bold" style="color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e5e7eb;">
+                                    <i class="fas fa-phone me-2"></i>Phone
+                                </th>
+                                <th class="py-3 px-4 text-end fw-bold" style="color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e5e7eb;">
+                                    <i class="fas fa-cog me-2"></i>Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="supplierTableBody">
+                            {% for supplier in object_list %}
+                                <tr class="supplier-row border-bottom" style="transition: all 0.2s ease;">
+                                    <td class="py-4 px-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex align-items-center justify-content-center" 
+                                                 style="width: 42px; height: 42px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 10px;">
+                                                <i class="fas fa-store-alt text-primary"></i>
+                                            </div>
+                                            <div class="ms-3">
+                                                <span class="fw-bold d-block" style="color: #111827; font-size: 0.95rem;">{{ supplier.name }}</span>
+                                                <small class="text-muted">Supplier ID: #{{ supplier.id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        {% if supplier.contact_person %}
+                                            <span class="fw-500" style="color: #374151;">{{ supplier.contact_person }}</span>
+                                        {% else %}
+                                            <span class="text-muted fst-italic">Not specified</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        {% if supplier.contact_email %}
+                                            <a href="mailto:{{ supplier.contact_email }}" class="text-decoration-none" style="color: #0891b2;">
+                                                <i class="fas fa-envelope me-1"></i>{{ supplier.contact_email }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted fst-italic">No email</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        {% if supplier.contact_phone %}
+                                            <a href="tel:{{ supplier.contact_phone }}" class="text-decoration-none" style="color: #374151;">
+                                                <i class="fas fa-phone me-1"></i>{{ supplier.contact_phone }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted fst-italic">No phone</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 px-4 text-end">
+                                        <div class="btn-group shadow-sm" role="group">
+                                            <a href="{% url 'supplier_update' supplier.pk %}" 
+                                               class="btn btn-sm border-0 fw-500" 
+                                               style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; padding: 8px 16px; transition: all 0.2s ease;"
+                                               onmouseover="this.style.background='linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%)';"
+                                               onmouseout="this.style.background='linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)';"
+                                               data-bs-toggle="tooltip" title="Edit supplier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% if user.is_admin %}
+                                                <a href="{% url 'supplier_delete' supplier.pk %}" 
+                                                   class="btn btn-sm border-0 fw-500" 
+                                                   style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #b91c1c; padding: 8px 16px; transition: all 0.2s ease;"
+                                                   onmouseover="this.style.background='linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)';"
+                                                   onmouseout="this.style.background='linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';"
+                                                   data-bs-toggle="tooltip" title="Delete supplier">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <div class="d-flex align-items-center justify-content-center mx-auto mb-3" 
+                         style="width: 80px; height: 80px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 20px;">
+                        <i class="fas fa-truck-loading fa-2x text-primary"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-2" style="color: #111827;">No Suppliers Yet</h3>
+                <p class="text-muted mb-4">Start building your supplier network to manage inventory sourcing efficiently.</p>
+                <a href="{% url 'supplier_create' %}" 
+                   class="btn btn-lg fw-bold shadow-sm border-0" 
+                   style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; border-radius: 12px; padding: 12px 32px;">
+                    <i class="fas fa-plus me-2"></i>Add Your First Supplier
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .supplier-row:hover {
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 50%) !important;
+    }
+    
+    .fw-500 {
+        font-weight: 500;
+    }
+    
+    .table tbody tr {
+        border-bottom: 1px solid #f3f4f6 !important;
+    }
+    
+    .table tbody tr:last-child {
+        border-bottom: none !important;
+    }
+</style>
+
+<script>
+    // Search functionality
+    document.getElementById('searchSupplier')?.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('.supplier-row');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Details - Multibliz{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="display-6 fw-bold mb-1">Stock Details</h1>
+      <p class="text-muted mb-0">Product inventory information and reorder status</p>
+    </div>
+    <div>
+      <a href="{% url 'stock_list' %}" class="btn btn-sm btn-outline-secondary">Back to Stock List</a>
+    </div>
+  </div>
+
+  <div class="detail-card card border-0 shadow-sm overflow-hidden">
+    <div class="card-body p-4">
+      <div class="row g-3 align-items-center">
+        <!-- Product column -->
+        <div class="col-lg-6 d-flex gap-3 align-items-start">
+          <div class="product-thumb rounded bg-light d-flex align-items-center justify-content-center">
+            <!-- If product has image, render it; otherwise placeholder -->
+            {% if object.product and object.product.image %}
+              <img src="{{ object.product.image.url }}" alt="{{ object.product.name }}" class="img-fluid" />
+            {% else %}
+              <div class="thumb-placeholder text-muted">No Image</div>
+            {% endif %}
+          </div>
+
+          <div class="flex-grow-1">
+            <h5 class="mb-1">{{ object.product.name }}</h5>
+            {% if object.product.category %}
+              <div class="mb-2"><span class="badge bg-secondary">{{ object.product.category }}</span></div>
+            {% endif %}
+            {% if object.product.description %}
+              <p class="text-muted small mb-2">{{ object.product.description }}</p>
+            {% endif %}
+
+            <h6 class="mb-1">Supplier</h6>
+            {% if object.supplier %}
+              <p class="mb-0">{{ object.supplier.name }}</p>
+              <small class="text-muted">
+                {% if object.supplier.contact_phone %}☎ {{ object.supplier.contact_phone }}{% endif %}
+                {% if object.supplier.contact_email %}&nbsp; • &nbsp;✉ {{ object.supplier.contact_email }}{% endif %}
+              </small>
+            {% else %}
+              <p class="text-muted mb-0">No supplier assigned</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Stock column -->
+        <div class="col-lg-6">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="mb-1">Stock Information</h6>
+              <p class="mb-1 text-muted small">Last updated <strong>{{ object.last_updated|date:'M d, Y H:i' }}</strong></p>
+            </div>
+            <div class="text-end">
+              {% if object.is_low_stock %}
+                <span class="badge badge-large bg-danger">LOW STOCK</span>
+              {% else %}
+                <span class="badge badge-large bg-success">HEALTHY</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-6">
+              <p class="text-muted small mb-1">Quantity</p>
+              <h4 class="fw-bold mb-0 stock-value">{{ object.quantity }}</h4>
+            </div>
+            <div class="col-6">
+              <p class="text-muted small mb-1">Reorder Level</p>
+              <h4 class="fw-bold mb-0">{{ object.reorder_level }}</h4>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2 justify-content-end">
+            <a href="{% url 'stock_update' object.pk %}" class="btn btn-primary btn-sm action-btn">
+              <i class="fas fa-edit me-1"></i> Edit
+            </a>
+            <a href="{% url 'stock_delete' object.pk %}" class="btn btn-outline-danger btn-sm action-btn">
+              <i class="fas fa-trash me-1"></i> Delete
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optional: Recent sales for this product -->
+    <div class="card-footer bg-white border-top">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <small class="text-muted">Recent Sales (last 5)</small>
+          <div class="mt-2">
+            {% for sale in object.product.sale_set.all|slice:":5" %}
+              <span class="small d-block">• {{ sale.sale_date|date:'M d, Y' }} — {{ sale.quantity }} unit(s)</span>
+            {% empty %}
+              <span class="small text-muted">No recent sales for this product.</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div>
+          <a href="{% url 'sale_list' %}?product={{ object.product.id }}" class="small">View all sales</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Products - Multibliz POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="display-5 fw-bold mb-2">Products</h1>
+            <p class="text-muted fs-6">Manage your product inventory</p>
+        </div>
+        <a href="{% url 'product_create' %}" class="btn btn-primary btn-lg px-4">
+            <i class="fas fa-plus me-2"></i>Add New Product
+        </a>
+    </div>
+
+    {% if object_list %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom p-4">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-boxes text-primary fs-6"></i>
+                    <h5 class="mb-0 fw-bold">Product Inventory</h5>
+                    <span class="badge bg-secondary ms-auto">{{ object_list|length }} products</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="productTable" data-sortable="true" data-toggleable="true">
+                        <thead>
+                            <tr>
+                                <th data-column="name" data-sortable="true">Name</th>
+                                <th data-column="price" data-sortable="true">Price</th>
+                                <th data-column="category" data-sortable="true">Category</th>
+                                <th data-column="status" data-sortable="true">Stock Status</th>
+                                <th data-column="quantity" data-sortable="true">Quantity</th>
+                                <th data-column="actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in object_list %}
+                                {% with stock=product.stock %}
+                                    {% if stock.quantity <= stock.reorder_level %}
+                                        <tr class="table-row-critical">
+                                    {% elif stock.quantity <= stock.reorder_level|add:15 %}
+                                        <tr class="table-row-warning">
+                                    {% else %}
+                                        <tr class="table-row-healthy">
+                                    {% endif %}
+                                        <td data-column="name">
+                                            {% if stock %}
+                                                <span class="status-indicator-dot {% if stock.quantity <= stock.reorder_level %}status-critical{% elif stock.quantity <= stock.reorder_level|add:15 %}status-warning{% else %}status-healthy{% endif %}"></span>
+                                            {% endif %}
+                                            <strong>{{ product.name }}</strong>
+                                        </td>
+                                        <td data-column="price" class="fw-bold text-success">₱{{ product.price|floatformat:2 }}</td>
+                                        <td data-column="category">
+                                            <span class="badge bg-light text-dark">{{ product.category }}</span>
+                                        </td>
+                                        <td data-column="status">
+                                            {% if stock %}
+                                                {% if stock.quantity <= stock.reorder_level %}
+                                                    <span class="badge status-badge status-badge-critical">
+                                                        <i class="fas fa-circle-exclamation me-1"></i>CRITICAL
+                                                    </span>
+                                                {% elif stock.quantity <= stock.reorder_level|add:15 %}
+                                                    <span class="badge status-badge status-badge-warning">
+                                                        <i class="fas fa-triangle-exclamation me-1"></i>REORDER SOON
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge status-badge status-badge-healthy">
+                                                        <i class="fas fa-check-circle me-1"></i>HEALTHY
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge status-badge status-badge-critical">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>NO STOCK
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td data-column="quantity">
+                                            {% if stock %}
+                                                <span class="fw-bold text-primary">{{ stock.quantity }}</span>
+                                                <small class="text-muted d-block">Reorder at: {{ stock.reorder_level }}</small>
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td data-column="actions">
+                                            <a href="{% url 'product_update' product.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% if user.is_admin %}
+                                                <a href="{% url 'product_delete' product.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-box-open fa-4x text-muted mb-4" style="opacity: 0.5;"></i>
+            <h4 class="fw-bold text-muted mb-2">No products found</h4>
+            <p class="text-muted fs-6 mb-4">Start by adding your first product to the inventory.</p>
+            <a href="{% url 'product_create' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus me-2"></i>Add First Product
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,440 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Return #{{ return.id }} Details - Multibliz POS{% endblock %}
+
+{% block content %}
+<style>
+    .detail-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .detail-header h2 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .detail-header .actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .btn-action {
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        backdrop-filter: blur(10px);
+    }
+    
+    .btn-edit:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        color: white;
+    }
+    
+    .btn-back {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        backdrop-filter: blur(10px);
+    }
+    
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        color: white;
+    }
+    
+    .detail-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+        .detail-container {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .detail-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .detail-card h4 {
+        color: #667eea;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        color: #636e72;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .info-value {
+        color: #2d3436;
+        font-weight: 700;
+        text-align: right;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .status-pending {
+        background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        color: #d63031;
+    }
+    
+    .status-approved {
+        background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        color: white;
+    }
+    
+    .status-rejected {
+        background: linear-gradient(135deg, #fab1a0 0%, #e17055 100%);
+        color: white;
+    }
+    
+    .status-completed {
+        background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+        color: white;
+    }
+    
+    .timeline-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        grid-column: 1 / -1;
+    }
+    
+    .timeline-item {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 2rem;
+        bottom: -1.5rem;
+        width: 2px;
+        background: linear-gradient(to bottom, #667eea, transparent);
+    }
+    
+    .timeline-item:last-child::before {
+        display: none;
+    }
+    
+    .timeline-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        position: absolute;
+        left: 0;
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .timeline-content {
+        flex: 1;
+        padding-left: 1.5rem;
+    }
+    
+    .timeline-title {
+        font-weight: 700;
+        color: #2d3436;
+        margin-bottom: 0.3rem;
+    }
+    
+    .timeline-date {
+        color: #95a5a6;
+        font-size: 0.85rem;
+    }
+    
+    .refund-highlight {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        margin-top: 1rem;
+    }
+    
+    .refund-amount {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #667eea;
+        margin: 0;
+    }
+    
+    .refund-label {
+        color: #636e72;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+</style>
+
+<div class="detail-header">
+    <h2>
+        <i class="fas fa-undo"></i>
+        Return #{{ return.id }} Details
+    </h2>
+    <div class="actions">
+        <a href="{% url 'return_update' return.id %}" class="btn-action btn-edit">
+            <i class="fas fa-edit"></i>
+            Update Status
+        </a>
+        <a href="{% url 'return_list' %}" class="btn-action btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Back to List
+        </a>
+    </div>
+</div>
+
+<div class="detail-container">
+    <!-- Return Information -->
+    <div class="detail-card">
+        <h4>
+            <i class="fas fa-info-circle"></i>
+            Return Information
+        </h4>
+        <div class="info-row">
+            <span class="info-label">Return ID</span>
+            <span class="info-value">#{{ return.id }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="info-value">
+                <span class="status-badge status-{{ return.status }}">
+                    {% if return.status == 'pending' %}
+                        <i class="fas fa-clock"></i>
+                    {% elif return.status == 'approved' %}
+                        <i class="fas fa-check"></i>
+                    {% elif return.status == 'rejected' %}
+                        <i class="fas fa-times"></i>
+                    {% elif return.status == 'completed' %}
+                        <i class="fas fa-check-double"></i>
+                    {% endif %}
+                    {{ return.get_status_display }}
+                </span>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Return Date</span>
+            <span class="info-value">{{ return.return_date|date:"F d, Y h:i A" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Return Reason</span>
+            <span class="info-value">{{ return.get_reason_display }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Quantity Returned</span>
+            <span class="info-value">{{ return.quantity_returned }} units</span>
+        </div>
+        {% if return.processed_by %}
+        <div class="info-row">
+            <span class="info-label">Processed By</span>
+            <span class="info-value">{{ return.processed_by }}</span>
+        </div>
+        {% endif %}
+        {% if return.processed_date %}
+        <div class="info-row">
+            <span class="info-label">Processed Date</span>
+            <span class="info-value">{{ return.processed_date|date:"F d, Y h:i A" }}</span>
+        </div>
+        {% endif %}
+        
+        <div class="refund-highlight">
+            <p class="refund-amount">₱{{ return.refund_amount|floatformat:2 }}</p>
+            <p class="refund-label">Refund Amount</p>
+        </div>
+    </div>
+    
+    <!-- Sale Information -->
+    <div class="detail-card">
+        <h4>
+            <i class="fas fa-receipt"></i>
+            Original Sale Information
+        </h4>
+        <div class="info-row">
+            <span class="info-label">Sale ID</span>
+            <span class="info-value">
+                <a href="{% url 'sale_detail' return.sale.id %}" style="color: #667eea; text-decoration: none; font-weight: 700;">
+                    #{{ return.sale.id }}
+                </a>
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Product</span>
+            <span class="info-value">{{ return.sale.product.name }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Sale Quantity</span>
+            <span class="info-value">{{ return.sale.quantity }} units</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Sale Amount</span>
+            <span class="info-value">₱{{ return.sale.total_price|floatformat:2 }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Sale Date</span>
+            <span class="info-value">{{ return.sale.sale_date|date:"F d, Y h:i A" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Customer</span>
+            <span class="info-value">{{ return.sale.customer_name|default:"Walk-in Customer" }}</span>
+        </div>
+    </div>
+    
+    <!-- Additional Details -->
+    {% if return.reason_details %}
+    <div class="detail-card" style="grid-column: 1 / -1;">
+        <h4>
+            <i class="fas fa-file-alt"></i>
+            Additional Details
+        </h4>
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; line-height: 1.6;">
+            {{ return.reason_details|linebreaks }}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Timeline -->
+    <div class="timeline-card">
+        <h4>
+            <i class="fas fa-history"></i>
+            Return Timeline
+        </h4>
+        <div class="timeline-item">
+            <div class="timeline-icon">
+                <i class="fas fa-plus"></i>
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-title">Return Created</div>
+                <div class="timeline-date">{{ return.return_date|date:"F d, Y h:i A" }}</div>
+            </div>
+        </div>
+        
+        {% if return.status == 'approved' or return.status == 'completed' %}
+        <div class="timeline-item">
+            <div class="timeline-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-title">Return Approved</div>
+                <div class="timeline-date">
+                    {% if return.processed_date %}
+                        {{ return.processed_date|date:"F d, Y h:i A" }}
+                    {% else %}
+                        Approved
+                    {% endif %}
+                    {% if return.processed_by %}
+                        by {{ return.processed_by }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if return.status == 'rejected' %}
+        <div class="timeline-item">
+            <div class="timeline-icon" style="background: linear-gradient(135deg, #e17055 0%, #d63031 100%);">
+                <i class="fas fa-times"></i>
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-title">Return Rejected</div>
+                <div class="timeline-date">
+                    {% if return.processed_date %}
+                        {{ return.processed_date|date:"F d, Y h:i A" }}
+                    {% else %}
+                        Rejected
+                    {% endif %}
+                    {% if return.processed_by %}
+                        by {{ return.processed_by }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if return.status == 'completed' %}
+        <div class="timeline-item">
+            <div class="timeline-icon" style="background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);">
+                <i class="fas fa-check-double"></i>
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-title">Return Completed</div>
+                <div class="timeline-date">
+                    {% if return.processed_date %}
+                        {{ return.processed_date|date:"F d, Y h:i A" }}
+                    {% else %}
+                        Completed
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

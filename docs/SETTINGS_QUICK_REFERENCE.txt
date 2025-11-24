@@ -1,0 +1,85 @@
+# Settings Feature - Quick Reference
+
+## 🎯 What's New?
+
+Your staff members can now manage their accounts and change passwords securely!
+
+## ✨ New Features
+
+### 1. **Settings Page** (`/accounts/settings/`)
+- View account information
+- See user role and permissions
+- Check account status
+- Get security tips
+
+### 2. **Change Password** (`/accounts/change-password/`)
+- Change password securely
+- Real-time password strength indicator
+- Password requirements validation
+- Error message handling
+
+## 🚀 How to Access
+
+**Option 1: Using Navbar**
+- Click username (top-right corner)
+- Select "Settings"
+
+**Option 2: Direct URL**
+- Type: `http://your-server/accounts/settings/`
+
+## 📋 Password Requirements
+
+When changing password, make sure it includes:
+- ✅ At least 8 characters
+- ✅ At least one uppercase letter (A-Z)
+- ✅ At least one lowercase letter (a-z)
+- ✅ At least one number (0-9)
+- ✅ At least one special character (!@#$%^&*)
+
+**Example**: `MyPassword@2024`
+
+## 🔄 Change Password Steps
+
+1. Go to Settings page
+2. Click "Change Password" button
+3. Enter current password
+4. Enter new password (check requirements)
+5. Confirm new password
+6. Click "Update Password"
+7. Success! Password changed
+
+## 📱 Works On
+
+- ✅ Desktop computers
+- ✅ Tablets
+- ✅ Mobile phones
+- ✅ All modern browsers
+- ✅ With dark mode enabled
+
+## 🔒 Security
+
+- Passwords are securely encrypted
+- Old password required to change
+- No sensitive data in logs
+- CSRF protected
+
+## 💡 Tips
+
+- Change password every 3 months
+- Don't use same password as other sites
+- Don't share with anyone
+- Use password manager to remember
+
+## 🆘 Need Help?
+
+See detailed guide: **USER_SETTINGS_QUICK_GUIDE.md**
+
+## 📚 Documentation
+
+- `USER_SETTINGS_QUICK_GUIDE.md` - For users
+- `ACCOUNT_SETTINGS_GUIDE.md` - Full reference
+- `ACCOUNT_SETTINGS_IMPLEMENTATION.md` - Technical details
+
+---
+
+

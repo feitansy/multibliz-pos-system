@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Supplier{% else %}Add Supplier{% endif %} - Multibliz POS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <!-- Form Header -->
+            <div class="mb-4">
+                <h1 class="mb-2">{% if object %}Edit Supplier{% else %}Add New Supplier{% endif %}</h1>
+                <p class="text-muted">{% if object %}Update supplier information and contact details{% else %}Add a new supplier to your inventory management system{% endif %}</p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-body p-5">
+                    <form method="post" novalidate class="supplier-form">
+                        {% csrf_token %}
+
+                        <!-- Company Name & Contact Person Row -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                                        <i class="fas fa-building text-primary"></i>Company Name
+                                    </label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-circle"></i>{{ form.name.errors.0 }}
+                                        </div>
+                                    {% else %}
+                                        <small class="form-text">Official supplier company name</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.contact_person.id_for_label }}" class="form-label">
+                                        <i class="fas fa-user text-primary"></i>Contact Person
+                                    </label>
+                                    {{ form.contact_person }}
+                                    {% if form.contact_person.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-circle"></i>{{ form.contact_person.errors.0 }}
+                                        </div>
+                                    {% else %}
+                                        <small class="form-text">Primary contact name</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email & Phone Row -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.contact_email.id_for_label }}" class="form-label">
+                                        <i class="fas fa-envelope text-success"></i>Email
+                                    </label>
+                                    {{ form.contact_email }}
+                                    {% if form.contact_email.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-circle"></i>{{ form.contact_email.errors.0 }}
+                                        </div>
+                                    {% else %}
+                                        <small class="form-text">Contact email address</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.contact_phone.id_for_label }}" class="form-label">
+                                        <i class="fas fa-phone text-info"></i>Phone
+                                    </label>
+                                    {{ form.contact_phone }}
+                                    {% if form.contact_phone.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-circle"></i>{{ form.contact_phone.errors.0 }}
+                                        </div>
+                                    {% else %}
+                                        <small class="form-text">Contact phone number</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="form-group">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">
+                                <i class="fas fa-map-marker-alt text-warning"></i>Address
+                            </label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="fas fa-exclamation-circle"></i>{{ form.address.errors.0 }}
+                                </div>
+                            {% else %}
+                                <small class="form-text">Business address or headquarters</small>
+                            {% endif %}
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-3 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg flex-grow-1 rounded-2 shadow-sm">
+                                <i class="fas fa-{% if object %}pencil-alt{% else %}plus{% endif %}"></i>
+                                {% if object %}Update Supplier{% else %}Add Supplier{% endif %}
+                            </button>
+                            <a href="{% url 'supplier_list' %}" class="btn btn-outline-secondary btn-lg rounded-2">
+                                <i class="fas fa-times"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="alert alert-info mt-4 rounded-3">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-info-circle me-3 mt-1"></i>
+                    <div>
+                        <h6 class="mb-1">Supplier Information</h6>
+                        <small class="text-muted">Keep supplier details up to date for better inventory management and communication. All fields are important for supplier tracking.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Real-time form validation feedback
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.supplier-form');
+    if (!form) return;
+
+    const inputs = form.querySelectorAll('input, select, textarea');
+
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            validateField(this);
+        });
+
+        input.addEventListener('blur', function() {
+            validateField(this);
+        });
+
+        input.addEventListener('focus', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+
+    function validateField(field) {
+        const isValid = field.checkValidity();
+        const parent = field.closest('.form-group');
+
+        if (field.value === '') {
+            field.classList.remove('is-valid', 'is-invalid');
+        } else if (isValid) {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        } else {
+            field.classList.remove('is-valid');
+            field.classList.add('is-invalid');
+        }
+    }
+
+    form.addEventListener('submit', function(e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+});
+</script>
+
+<style>
+    form input[type="text"],
+    form input[type="email"],
+    form input[type="tel"],
+    form textarea {
+        border: 2px solid #e5e7eb !important;
+        border-radius: 0.5rem !important;
+        padding: 0.75rem 1rem !important;
+        transition: all 0.3s ease !important;
+        font-size: 0.95rem !important;
+    }
+
+    form input[type="text"]:focus,
+    form input[type="email"]:focus,
+    form input[type="tel"]:focus,
+    form textarea:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
+        outline: none !important;
+    }
+
+    form textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .btn-primary {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3) !important;
+    }
+
+    .btn-outline-secondary {
+        font-weight: 600;
+        border-width: 2px;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #f3f4f6;
+        border-color: #6b7280;
+    }
+
+    .form-label {
+        color: #1f2937;
+        font-size: 0.95rem;
+    }
+
+    .input-group {
+        position: relative;
+    }
+
+    .text-danger {
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+
+    .alert-info {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+        border-left: 4px solid #2563eb;
+    }
+</style>
+{% endblock %}

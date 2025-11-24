@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Update Return{% else %}Create Return{% endif %} - Multibliz POS{% endblock %}
+
+{% block content %}
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .form-header h2 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .form-container {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: #2d3436;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-size: 0.95rem;
+    }
+    
+    .form-control, .form-select {
+        padding: 0.75rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .helptext {
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        margin-top: 0.3rem;
+        display: block;
+    }
+    
+    .sale-info {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #667eea;
+    }
+    
+    .sale-info h5 {
+        color: #667eea;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+    
+    .sale-info .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+    }
+    
+    .sale-info .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .sale-info .label {
+        color: #636e72;
+        font-weight: 600;
+    }
+    
+    .sale-info .value {
+        color: #2d3436;
+        font-weight: 700;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #f0f0f0;
+    }
+    
+    .btn-submit {
+        flex: 1;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.9rem 2rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-cancel {
+        flex: 1;
+        background: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
+        color: #2d3436;
+        padding: 0.9rem 2rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-cancel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        color: #2d3436;
+    }
+    
+    .required-indicator {
+        color: #e74c3c;
+        margin-left: 0.2rem;
+    }
+    
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0 0;
+    }
+    
+    .errorlist li {
+        color: #e74c3c;
+        font-size: 0.85rem;
+        background: rgba(231, 76, 60, 0.1);
+        padding: 0.5rem;
+        border-radius: 5px;
+        margin-top: 0.3rem;
+    }
+</style>
+
+<div class="form-header">
+    <h2>
+        <i class="fas fa-undo"></i>
+        {% if object %}Update Return #{{ object.id }}{% else %}Create Product Return{% endif %}
+    </h2>
+</div>
+
+<div class="form-container">
+    <form method="post" id="returnForm">
+        {% csrf_token %}
+        
+        {% if not object %}
+        <div class="form-group">
+            <label for="{{ form.sale.id_for_label }}">
+                Sale Transaction <span class="required-indicator">*</span>
+            </label>
+            {{ form.sale }}
+            {% if form.sale.errors %}
+                <ul class="errorlist">
+                    {% for error in form.sale.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <small class="helptext">Select the original sale transaction for this return</small>
+        </div>
+        
+        <div id="saleInfoDisplay" style="display: none;"></div>
+        
+        <div class="form-group">
+            <label for="{{ form.quantity_returned.id_for_label }}">
+                Quantity to Return <span class="required-indicator">*</span>
+            </label>
+            {{ form.quantity_returned }}
+            {% if form.quantity_returned.errors %}
+                <ul class="errorlist">
+                    {% for error in form.quantity_returned.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <small class="helptext">Number of units being returned</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.reason.id_for_label }}">
+                Return Reason <span class="required-indicator">*</span>
+            </label>
+            {{ form.reason }}
+            {% if form.reason.errors %}
+                <ul class="errorlist">
+                    {% for error in form.reason.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.reason_details.id_for_label }}">
+                Additional Details
+            </label>
+            {{ form.reason_details }}
+            {% if form.reason_details.errors %}
+                <ul class="errorlist">
+                    {% for error in form.reason_details.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <small class="helptext">Provide more information about the return</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.refund_amount.id_for_label }}">
+                Refund Amount (₱) <span class="required-indicator">*</span>
+            </label>
+            {{ form.refund_amount }}
+            {% if form.refund_amount.errors %}
+                <ul class="errorlist">
+                    {% for error in form.refund_amount.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <small class="helptext">Amount to be refunded to customer</small>
+        </div>
+        {% else %}
+        <!-- Update form shows different fields -->
+        <div class="sale-info">
+            <h5><i class="fas fa-receipt"></i> Sale Information</h5>
+            <div class="info-row">
+                <span class="label">Sale ID:</span>
+                <span class="value">#{{ object.sale.id }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Product:</span>
+                <span class="value">{{ object.sale.product.name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Quantity Returned:</span>
+                <span class="value">{{ object.quantity_returned }} units</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Return Reason:</span>
+                <span class="value">{{ object.get_reason_display }}</span>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.status.id_for_label }}">
+                Return Status <span class="required-indicator">*</span>
+            </label>
+            {{ form.status }}
+            {% if form.status.errors %}
+                <ul class="errorlist">
+                    {% for error in form.status.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.reason_details.id_for_label }}">
+                Additional Details
+            </label>
+            {{ form.reason_details }}
+            {% if form.reason_details.errors %}
+                <ul class="errorlist">
+                    {% for error in form.reason_details.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.refund_amount.id_for_label }}">
+                Refund Amount (₱) <span class="required-indicator">*</span>
+            </label>
+            {{ form.refund_amount }}
+            {% if form.refund_amount.errors %}
+                <ul class="errorlist">
+                    {% for error in form.refund_amount.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i>
+                {% if object %}Update Return{% else %}Create Return{% endif %}
+            </button>
+            <a href="{% url 'return_list' %}" class="btn-cancel">
+                <i class="fas fa-times"></i>
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Style form controls
+    document.addEventListener('DOMContentLoaded', function() {
+        const formControls = document.querySelectorAll('input[type="text"], input[type="number"], textarea, select');
+        formControls.forEach(function(control) {
+            control.classList.add('form-control');
+        });
+        
+        const selects = document.querySelectorAll('select');
+        selects.forEach(function(select) {
+            select.classList.add('form-select');
+        });
+        
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(function(textarea) {
+            textarea.rows = 4;
+        });
+        
+        // Auto-calculate refund amount based on sale selection
+        {% if not object %}
+        const saleSelect = document.getElementById('{{ form.sale.id_for_label }}');
+        const quantityInput = document.getElementById('{{ form.quantity_returned.id_for_label }}');
+        const refundInput = document.getElementById('{{ form.refund_amount.id_for_label }}');
+        
+        if (saleSelect && quantityInput && refundInput) {
+            function updateRefundAmount() {
+                const selectedOption = saleSelect.options[saleSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    // Extract sale details from option text
+                    const quantity = parseInt(quantityInput.value) || 0;
+                    
+                    // Get sale details via AJAX would be better, but for now we can estimate
+                    // You can enhance this with an API call to get exact price
+                    
+                    // Display sale info
+                    const saleInfoDiv = document.getElementById('saleInfoDisplay');
+                    if (selectedOption.value) {
+                        saleInfoDiv.style.display = 'block';
+                        saleInfoDiv.innerHTML = `
+                            <div class="sale-info">
+                                <h5><i class="fas fa-info-circle"></i> Selected Sale</h5>
+                                <div class="info-row">
+                                    <span class="label">Sale:</span>
+                                    <span class="value">${selectedOption.text}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+            
+            saleSelect.addEventListener('change', updateRefundAmount);
+            quantityInput.addEventListener('input', updateRefundAmount);
+        }
+        {% endif %}
+    });
+</script>
+{% endblock %}

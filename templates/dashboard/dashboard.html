@@ -1,0 +1,506 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Multibliz POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" id="dashboard-main">
+    <div class="container-lg" style="max-width: 1600px; margin: 0 auto; padding-left: 30px; padding-right: 30px;">
+        
+        <!-- Data Visualization Section -->
+        <div class="row g-3 mb-5 chart-data-fade-in">
+            <!-- 7-Day Sales Sparkline -->
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-3">
+                        <div class="chart-container-header d-flex align-items-center gap-2">
+                            <i class="fas fa-sparkles text-primary"></i>
+                            <div>
+                                <h6 class="mb-0 fw-bold">7-Day Sales Trend</h6>
+                                <small class="text-muted">Last 7 days of revenue</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4" style="min-height: 250px;">
+                        <div class="chart-container">
+                            <div class="sparkline-wrapper">
+                                <canvas id="salesSparklineChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales by Day of Week -->
+            <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom p-3">
+                        <div class="chart-container-header d-flex align-items-center gap-2">
+                            <i class="fas fa-chart-bar text-primary"></i>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Sales by Day of Week</h6>
+                                <small class="text-muted">Last 30 days breakdown</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4" style="min-height: 250px;">
+                        <div class="chart-container">
+                            <canvas id="salesByDayChart" height="80"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HERO METRIC: Total Revenue (30 Days) -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card dashboard-metric-hero border-0 shadow-md h-100 overflow-hidden">
+                    <div class="card-body p-5">
+                        <div class="row align-items-center g-4">
+                            <div class="col-auto">
+                                <div class="metric-icon-lg bg-primary bg-opacity-10 rounded-circle p-4">
+                                    <i class="fas fa-chart-line text-primary fs-3"></i>
+                                </div>
+                            </div>
+                            <div class="col flex-grow-1">
+                                <p class="text-muted small fw-bold text-uppercase mb-2 letter-spacing">Total Revenue</p>
+                                <div class="d-flex align-items-end gap-3">
+                                    <h1 class="hero-metric-value mb-0">₱{{ total_sales|floatformat:2 }}</h1>
+                                    <span class="badge bg-success text-white rounded-pill px-3 py-2 fs-6">
+                                        <i class="fas fa-arrow-up me-1"></i>Last 30 Days
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="text-end">
+                                    <small class="text-muted d-block">Total Transactions</small>
+                                    <h4 class="mb-0 fw-bold text-primary">{{ sales_count }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-metric-divider"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions - Optimized Grid -->
+        <div class="row g-3 mb-5">
+        <div class="col-12 col-md-4">
+            <a href="{% url 'pos' %}" class="btn btn-danger w-100 rounded-2 fw-600 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="fas fa-cash-register"></i>
+                <span>POS Terminal</span>
+            </a>
+        </div>
+        <div class="col-12 col-md-4">
+            <a href="{% url 'product_create' %}" class="btn btn-primary w-100 rounded-2 fw-600 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="fas fa-plus"></i>
+                <span>Add Product</span>
+            </a>
+        </div>
+        <div class="col-12 col-md-4">
+            <a href="{% url 'sale_create' %}" class="btn btn-success w-100 rounded-2 fw-600 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Record Sale</span>
+            </a>
+        </div>
+        <div class="col-12 col-md-4">
+            <a href="{% url 'stock_create' %}" class="btn btn-info w-100 rounded-2 fw-600 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="fas fa-box"></i>
+                <span>Update Stock</span>
+            </a>
+        </div>
+        <div class="col-12 col-md-4">
+            <button id="generateBtn" class="btn btn-warning w-100 rounded-2 fw-600 py-3 text-white d-flex align-items-center justify-content-center gap-2 shadow-sm" onclick="generateForecasts()">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <span>Generate AI</span>
+            </button>
+        </div>
+        <div class="col-12 col-md-4">
+            <a href="{% url 'analytics' %}" class="btn btn-secondary w-100 rounded-2 fw-600 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="fas fa-chart-bar"></i>
+                <span>Analytics</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Supporting Metrics Row - Color Coded with KPI -->
+    <div class="row g-3 mb-5">
+        <!-- Sales Metric (Green) with KPI -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card dashboard-metric dashboard-metric-sales border-0 shadow-sm h-100" data-kpi="sales">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <p class="text-muted small fw-bold text-uppercase mb-2">Sales Count</p>
+                            <h3 class="fw-bold text-success mb-0" data-metric="sales-count">{{ sales_count }}</h3>
+                            <small class="text-muted">transactions</small>
+                            <div class="kpi-container">
+                                <small class="kpi-indicator text-success">
+                                    <i class="fas fa-arrow-up"></i> {{ sales_change|floatformat:1 }}%
+                                </small>
+                            </div>
+                        </div>
+                        <div class="metric-icon metric-icon-sales rounded-circle p-3">
+                            <i class="fas fa-shopping-cart text-white fs-5"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Metric (Teal) -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card dashboard-metric dashboard-metric-inventory border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small fw-bold text-uppercase mb-2">Low Stock Items</p>
+                            <h3 class="fw-bold text-info mb-0">{{ low_stock_count }}</h3>
+                            <small class="text-muted">items to reorder</small>
+                        </div>
+                        <div class="metric-icon metric-icon-inventory rounded-circle p-3">
+                            <i class="fas fa-exclamation-triangle text-white fs-5"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forecast Metric (Purple) -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card dashboard-metric dashboard-metric-forecast border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small fw-bold text-uppercase mb-2">Active Forecasts</p>
+                            <h3 class="fw-bold mb-0" style="color: #8b5cf6;">{{ upcoming_forecasts|length }}</h3>
+                            <small class="text-muted">predictions available</small>
+                        </div>
+                        <div class="metric-icon metric-icon-forecast rounded-circle p-3">
+                            <i class="fas fa-brain text-white fs-5"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Status Metric -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card dashboard-metric dashboard-metric-status border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small fw-bold text-uppercase mb-2">System Status</p>
+                            <h3 class="fw-bold text-success mb-0">{% if low_stock_count > 0 %}CAUTION{% else %}HEALTHY{% endif %}</h3>
+                            <small class="text-muted">{% if low_stock_count > 0 %}Inventory alerts active{% else %}All systems normal{% endif %}</small>
+                        </div>
+                        <div class="metric-icon {% if low_stock_count > 0 %}metric-icon-warning{% else %}metric-icon-ok{% endif %} rounded-circle p-3">
+                            <i class="fas {% if low_stock_count > 0 %}fa-alert-circle{% else %}fa-check-circle{% endif %} text-white fs-5"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row g-3 mb-5">
+        <!-- Recent Sales Activity -->
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom p-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-history text-primary fs-6"></i>
+                        <h6 class="mb-0 fw-bold">Recent Sales Activity</h6>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    {% if recent_sales %}
+                        <table class="table table-hover border-0 align-middle mb-0 dashboard-sales-table">
+                            <thead class="border-bottom">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Qty</th>
+                                    <th>Total</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in recent_sales %}
+                                    <tr>
+                                        <td>
+                                            <span class="fw-500">{{ sale.product.name }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ sale.quantity }}</span>
+                                        </td>
+                                        <td>₱{{ sale.total_price|floatformat:2 }}</td>
+                                        <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-bag fa-4x text-muted mb-3 opacity-50"></i>
+                            <p class="text-muted mb-3">No recent sales data available.</p>
+                            <a href="{% url 'sale_create' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-2"></i>Add First Sale
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- AI-Powered Forecasts -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom p-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-chart-bar text-primary fs-6"></i>
+                        <h5 class="mb-0 fw-bold">AI-Powered Forecasts</h5>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    {% if upcoming_forecasts %}
+                        <div class="mb-4">
+                            <small class="text-muted fw-bold text-uppercase">Next 7 days predictions</small>
+                        </div>
+                        <div style="max-height: 400px; overflow-y: auto;">
+                            {% for forecast in upcoming_forecasts %}
+                                <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded-2 bg-gradient" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%); border-left: 3px solid #8b5cf6;">
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold mb-1">{{ forecast.product.name }}</h6>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <small class="text-muted">{{ forecast.forecast_date|date:"M d, Y" }}</small>
+                                            <span class="badge bg-primary text-white fw-bold">
+                                                <i class="fas fa-boxes me-1"></i>{{ forecast.predicted_quantity }} units
+                                            </span>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted">Projected Revenue: <strong class="text-success">₱{{ forecast.predicted_revenue|floatformat:2 }}</strong></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'forecast_list' %}" class="btn btn-primary btn-sm" style="text-decoration: none;">
+                                <i class="fas fa-chart-line me-2"></i>View All Forecasts
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-brain fa-4x text-muted mb-3 opacity-50"></i>
+                            <p class="text-muted mb-3">No forecasts available yet.</p>
+                            <a href="{% url 'forecast_generate' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-wand-magic-sparkles me-2"></i>Generate Forecasts
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Row -->
+    <div class="row g-4">
+        <!-- Inventory Alerts -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom p-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-boxes text-primary fs-6"></i>
+                        <h5 class="mb-0 fw-bold">Inventory Alerts</h5>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    {% if low_stock_items %}
+                        <div class="row g-3">
+                            {% for item in low_stock_items %}
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <div class="alert alert-warning border-0 mb-0 h-100 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <strong class="d-block mb-2">{{ item.product.name }}</strong>
+                                            <small class="text-dark opacity-75">Only {{ item.quantity }} units remaining</small>
+                                        </div>
+                                        <a href="{% url 'stock_update' item.id %}" class="btn btn-sm btn-warning text-white mt-3 align-self-start">
+                                            <i class="fas fa-edit me-1"></i>Update
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-4x text-success mb-3 opacity-50"></i>
+                            <p class="text-success fw-500 mb-0">All inventory levels are healthy!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Dashboard Styles -->
+<style>
+    .dashboard-metric {
+        border-top: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .dashboard-metric:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .metric-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+    }
+
+    .card {
+        border-radius: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .card-header {
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+
+    .table tbody tr {
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .table tbody tr:hover {
+        background-color: #fafafa;
+    }
+
+    .btn {
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .badge {
+        border-radius: 0.35rem;
+        padding: 0.375rem 0.65rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .alert {
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 0;
+    }
+
+    .opacity-50 {
+        opacity: 0.5;
+    }
+
+    .opacity-75 {
+        opacity: 0.75;
+    }
+
+    .fw-500 {
+        font-weight: 500;
+    }
+
+    .fw-600 {
+        font-weight: 600;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .display-5 {
+            font-size: 2rem;
+        }
+
+        .card-body {
+            padding: 1.25rem !important;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<script>
+function generateForecasts() {
+    const btn = document.getElementById('generateBtn');
+    const originalText = btn.innerHTML;
+    
+    // Disable button and show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Generating...</span>';
+    
+    // Send AJAX request
+    fetch('{% url "forecast_generate" %}', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Show success message
+        showNotification('✓ Forecasts generated successfully!', 'success');
+        
+        // Reload page after 2 seconds to show updated forecasts
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    })
+    .catch(error => {
+        // Show error message
+        showNotification('✗ Error generating forecasts. Please try again.', 'error');
+        
+        // Restore button
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `auth-toast auth-toast-${type} fade-in-out`;
+    notification.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'times-circle'} me-2"></i>
+            <span>${message}</span>
+        </div>
+        <button type="button" class="toast-close" onclick="this.parentElement.style.display='none';">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

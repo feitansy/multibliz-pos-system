@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block title %}Receipt - Sale #{{ sale.id }} - Multibliz POS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <!-- Receipt Container -->
+            <div id="receipt" class="receipt-container">
+                <!-- Header -->
+                <div class="receipt-header text-center mb-4">
+                    <h1 class="receipt-title">
+                        <i class="fas fa-store"></i> MULTIBLIZ POS SYSTEM
+                    </h1>
+                    <p class="receipt-subtitle">Professional Receipt</p>
+                    <div class="receipt-divider"></div>
+                </div>
+
+                <!-- Receipt Details -->
+                <div class="receipt-details mb-4">
+                    <div class="receipt-row">
+                        <span class="receipt-label">Receipt #:</span>
+                        <span class="receipt-value">#{{ sale.id }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Date & Time:</span>
+                        <span class="receipt-value">{{ sale.sale_date|date:"M d, Y g:i A" }}</span>
+                    </div>
+                    {% if sale.customer_name %}
+                    <div class="receipt-row">
+                        <span class="receipt-label">Customer:</span>
+                        <span class="receipt-value">{{ sale.customer_name }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="receipt-divider-small"></div>
+                </div>
+
+                <!-- Items Section -->
+                <div class="receipt-items mb-4">
+                    <div class="receipt-item-header">
+                        <span class="item-description">Item</span>
+                        <span class="item-qty text-end">Qty</span>
+                        <span class="item-price text-end">Price</span>
+                    </div>
+                    <div class="receipt-divider-small"></div>
+
+                    <!-- Single Item -->
+                    <div class="receipt-item">
+                        <div class="item-row">
+                            <span class="item-description">{{ sale.product.name }}</span>
+                            <span class="item-qty text-end">{{ sale.quantity }}</span>
+                            <span class="item-price text-end">₱{{ sale.product.price|floatformat:2 }}</span>
+                        </div>
+                        <div class="item-subtotal">
+                            <span class="text-muted">Subtotal:</span>
+                            <span class="text-end">₱{{ sale.total_price|floatformat:2 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="receipt-divider"></div>
+                </div>
+
+                <!-- Totals Section -->
+                <div class="receipt-totals mb-4">
+                    <div class="receipt-total-row">
+                        <span class="receipt-label">Subtotal:</span>
+                        <span class="receipt-value">₱{{ sale.total_price|floatformat:2 }}</span>
+                    </div>
+                    <div class="receipt-total-row">
+                        <span class="receipt-label">Tax (0%):</span>
+                        <span class="receipt-value">₱0.00</span>
+                    </div>
+                    <div class="receipt-divider-small"></div>
+                    <div class="receipt-total-row total-amount">
+                        <span class="receipt-label">TOTAL:</span>
+                        <span class="receipt-value">₱{{ sale.total_price|floatformat:2 }}</span>
+                    </div>
+                </div>
+
+                <!-- Payment Section -->
+                <div class="receipt-payment mb-4">
+                    <div class="receipt-row">
+                        <span class="receipt-label">Payment Method:</span>
+                        <span class="receipt-value badge bg-success">Cash</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Amount Paid:</span>
+                        <span class="receipt-value">₱{{ sale.total_price|floatformat:2 }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Change:</span>
+                        <span class="receipt-value">₱0.00</span>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="receipt-footer text-center">
+                    <div class="receipt-divider"></div>
+                    <p class="receipt-thank-you">
+                        <i class="fas fa-heart text-danger"></i>
+                        Thank You for Your Purchase!
+                        <i class="fas fa-heart text-danger"></i>
+                    </p>
+                    <p class="receipt-tagline">
+                        Visit us again soon for quality products and excellent service.
+                    </p>
+                    <p class="receipt-timestamp">
+                        Receipt generated: {{ now|date:"M d, Y g:i A" }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mt-5 no-print">
+                <div class="col-12">
+                    <button class="btn btn-primary w-100 mb-2" onclick="printReceipt()">
+                        <i class="fas fa-print me-2"></i>Print Receipt
+                    </button>
+                    <a href="{% url 'sale_list' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Sales
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Receipt Styling */
+    .receipt-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        max-width: 80mm;
+        margin: 0 auto;
+    }
+
+    .receipt-header {
+        margin-bottom: 20px;
+    }
+
+    .receipt-title {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0;
+        letter-spacing: 1px;
+    }
+
+    .receipt-subtitle {
+        font-size: 12px;
+        color: #666;
+        margin: 5px 0 0 0;
+    }
+
+    .receipt-divider {
+        border-top: 2px solid #333;
+        margin: 10px 0;
+    }
+
+    .receipt-divider-small {
+        border-top: 1px dashed #ccc;
+        margin: 8px 0;
+    }
+
+    .receipt-details,
+    .receipt-payment {
+        font-size: 13px;
+    }
+
+    .receipt-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+
+    .receipt-label {
+        font-weight: bold;
+        flex: 1;
+    }
+
+    .receipt-value {
+        text-align: right;
+        flex: 1;
+    }
+
+    /* Items Section */
+    .receipt-item-header {
+        display: grid;
+        grid-template-columns: 1fr 50px 60px;
+        gap: 10px;
+        font-weight: bold;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+
+    .receipt-item {
+        margin-bottom: 15px;
+    }
+
+    .item-row {
+        display: grid;
+        grid-template-columns: 1fr 50px 60px;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    .item-description {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .item-qty,
+    .item-price {
+        text-align: right;
+    }
+
+    .item-subtotal {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    /* Totals Section */
+    .receipt-totals {
+        font-size: 13px;
+    }
+
+    .receipt-total-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+
+    .receipt-total-row.total-amount {
+        font-weight: bold;
+        font-size: 15px;
+        margin-top: 10px;
+    }
+
+    /* Footer */
+    .receipt-footer {
+        font-size: 12px;
+        margin-top: 20px;
+    }
+
+    .receipt-thank-you {
+        font-weight: bold;
+        font-size: 13px;
+        margin: 10px 0 5px 0;
+    }
+
+    .receipt-tagline {
+        font-size: 11px;
+        color: #666;
+        margin: 5px 0;
+    }
+
+    .receipt-timestamp {
+        font-size: 10px;
+        color: #999;
+        margin: 10px 0 0 0;
+    }
+
+    /* Print Styles */
+    @media print {
+        body {
+            background: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 80mm;
+            margin: 0;
+            padding: 0;
+        }
+
+        .row {
+            margin: 0;
+        }
+
+        .col-lg-6 {
+            max-width: 100%;
+            padding: 0;
+        }
+
+        .receipt-container {
+            box-shadow: none;
+            padding: 0;
+            background: white;
+            max-width: 100%;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        @page {
+            size: 80mm auto;
+            margin: 0;
+        }
+    }
+</style>
+
+<script>
+    function printReceipt() {
+        window.print();
+    }
+
+    // Auto-focus print dialog on page load for convenience
+    window.addEventListener('load', function() {
+        // Uncomment to auto-print
+        // window.print();
+    });
+</script>
+{% endblock %}

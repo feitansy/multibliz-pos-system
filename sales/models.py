@@ -1,0 +1,54 @@
+from django.db import models
+
+class Product(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    category = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+class Sale(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    sale_date = models.DateTimeField(auto_now_add=True)
+    customer_name = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"Sale of {self.product.name} - {self.quantity} units"
+
+class Return(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('completed', 'Completed'),
+    ]
+    
+    REASON_CHOICES = [
+        ('defective', 'Defective Product'),
+        ('wrong_item', 'Wrong Item'),
+        ('damaged', 'Damaged'),
+        ('not_satisfied', 'Customer Not Satisfied'),
+        ('other', 'Other'),
+    ]
+    
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='returns')
+    return_date = models.DateTimeField(auto_now_add=True)
+    quantity_returned = models.PositiveIntegerField()
+    reason = models.CharField(max_length=50, choices=REASON_CHOICES)
+    reason_details = models.TextField(blank=True, help_text="Additional details about the return")
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    processed_by = models.CharField(max_length=255, blank=True)
+    processed_date = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Return #{self.id} - Sale #{self.sale.id} - {self.get_status_display()}"
+    
+    class Meta:
+        ordering = ['-return_date']

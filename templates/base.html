@@ -1,0 +1,196 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Multibliz POS System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/darkmode.css' %}?v=4">
+</head>
+<body class="modern-layout">
+    {% with request.resolver_match.url_name as url_name %}
+    {% if url_name not in 'login|signup|password_reset|password_reset_done|password_reset_confirm|password_reset_complete|forgot_password_request|verify_otp|reset_password' %}
+    
+    <!-- Modern Sidebar -->
+    <div class="modern-sidebar">
+        <div class="sidebar-header">
+            <img src="{% static 'images/multibliz-logo.png' %}" alt="Multibliz International Corporation" class="sidebar-logo-img" title="Multibliz International Corporation">
+        </div>
+        
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <nav class="sidebar-nav">
+            <a href="{% url 'dashboard' %}" class="sidebar-item {% if url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+            
+            <div class="sidebar-section-title">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Sales Management</span>
+            </div>
+            <a href="{% url 'pos' %}" class="sidebar-item sidebar-sub">
+                <i class="fas fa-cash-register"></i>
+                <span>Terminal</span>
+            </a>
+            <a href="{% url 'sale_list' %}" class="sidebar-item sidebar-sub">
+                <i class="fas fa-receipt"></i>
+                <span>Sales Records</span>
+            </a>
+            
+            <div class="sidebar-section-title">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Purchase Management</span>
+            </div>
+            <a href="{% url 'supplier_list' %}" class="sidebar-item sidebar-sub">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Suppliers List</span>
+            </a>
+            <a href="{% url 'return_list' %}" class="sidebar-item sidebar-sub {% if url_name == 'return_list' %}active{% endif %}">
+                <i class="fas fa-undo"></i>
+                <span>Returns</span>
+            </a>
+            
+            <div class="sidebar-section-title">
+                <i class="fas fa-boxes"></i>
+                <span>Inventory</span>
+            </div>
+            <a href="{% url 'product_list' %}" class="sidebar-item sidebar-sub">
+                <i class="fas fa-truck"></i>
+                <span>Product Inventory</span>
+            </a>
+            <a href="{% url 'stock_list' %}" class="sidebar-item sidebar-sub {% if url_name == 'stock_list' %}active{% endif %}">
+                <i class="fas fa-box-open"></i>
+                <span>Stock List</span>
+            </a>
+        </nav>
+    </div>
+    
+    <!-- Modern Top Bar -->
+    <div class="modern-topbar">
+        <div class="topbar-left">
+            <i class="fas fa-th-large text-purple"></i>
+            <span class="page-title">{% block page_title %}Dashboard{% endblock %}</span>
+        </div>
+        
+        <div class="topbar-right">
+            <button class="topbar-icon-btn" data-toggle="darkmode" title="Toggle Dark Mode">
+                <i class="fas fa-sun"></i>
+            </button>
+            
+            <div class="dropdown notification-dropdown">
+                <button class="topbar-icon-btn" data-bs-toggle="dropdown" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    {% if notification_count > 0 %}
+                    <span class="notification-badge">{{ notification_count }}</span>
+                    {% endif %}
+                </button>
+                <div class="dropdown-menu dropdown-menu-end notification-menu" style="min-width: 380px; max-width: 420px;">
+                    <div class="notification-header">
+                        <h6 class="mb-0">Notifications</h6>
+                        <span class="badge" style="background: #ef4444; border-radius: 4px; font-size: 12px; font-weight: 700; padding: 4px 10px;">{{ notification_count }}</span>
+                    </div>
+                    <div class="notification-list">
+                        {% if low_stock_notifications %}
+                            {% for notification in low_stock_notifications %}
+                            <a href="{{ notification.url }}" class="notification-item">
+                                <div class="notification-icon bg-warning">
+                                    <i class="fas {{ notification.icon }}"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <strong>{{ notification.title }}</strong>
+                                    <p class="mb-0">{{ notification.message }}</p>
+                                    <small class="text-muted">{{ notification.timestamp|timesince }} ago</small>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="notification-empty">
+                                <i class="fas fa-check-circle text-success mb-2"></i>
+                                <p class="mb-0">All stock levels are healthy!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% if notification_count > 0 %}
+                    <div class="notification-footer">
+                        <a href="{% url 'stock_list' %}" class="btn btn-sm btn-primary w-100">View All Inventory</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if user.is_authenticated %}
+            <div class="dropdown">
+                <button class="topbar-user-btn" data-bs-toggle="dropdown">
+                    <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=667eea&color=fff" alt="User" class="user-avatar">
+                    <span class="user-name">{{ user.username }}</span>
+                    <i class="fas fa-chevron-down ms-2"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{% url 'account_settings' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                    <li><a class="dropdown-item" href="{% url 'security_dashboard' %}"><i class="fas fa-shield-alt me-2"></i>Security</a></li>
+                    <li><a class="dropdown-item" href="{% url 'edit_profile' %}"><i class="fas fa-edit me-2"></i>Edit Profile</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content Area -->
+    {% with request.resolver_match.url_name as url_name %}
+    {% if url_name not in 'login|signup|password_reset|password_reset_done|password_reset_confirm|password_reset_complete' %}
+    <div class="modern-content">
+    {% else %}
+    <div class="container-fluid">
+    {% endif %}
+        {% block content %}{% endblock %}
+    </div>
+    {% endwith %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js for Data Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <!-- Custom Charts Library -->
+    <script src="{% static 'js/charts.js' %}"></script>
+    
+    <!-- Advanced Table Features -->
+    <script src="{% static 'js/tables.js' %}"></script>
+    
+    <!-- Dark Mode Toggle -->
+    <script src="{% static 'js/darkmode.js' %}"></script>
+    
+    <!-- Sidebar Toggle Script -->
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.modern-sidebar').classList.toggle('collapsed');
+            document.querySelector('.modern-content').classList.toggle('sidebar-collapsed');
+            document.querySelector('.modern-topbar').classList.toggle('sidebar-collapsed');
+        }
+    </script>
+    
+    <!-- Pass data to JavaScript -->
+    <script>
+        {% if seven_day_sales %}
+        window.sevenDaySalesData = '{{ seven_day_sales|escapejs }}';
+        {% endif %}
+        {% if sales_by_day %}
+        window.salesByDayData = '{{ sales_by_day|escapejs }}';
+        {% endif %}
+        {% if sales_change %}
+        window.salesChangePercent = {{ sales_change }};
+        {% endif %}
+    </script>
+</body>
+</html>

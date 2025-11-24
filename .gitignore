@@ -1,0 +1,58 @@
+# Django
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+*.egg
+*.egg-info
+dist/
+build/
+
+# Database
+*.sqlite3
+db.sqlite3
+*.db
+
+# Environment
+.env
+.venv/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Static files
+/staticfiles/
+/static/
+
+# Media files
+/media/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+secrets.json
+*.key
+*.pem
+
+# Data
+/data/
+/trained_models/
+*.csv
+*.xlsx
+
+# Backups
+*.bak
+*.backup
