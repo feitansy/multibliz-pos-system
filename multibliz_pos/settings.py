@@ -16,38 +16,17 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file (if exists)
-try:
-    from dotenv import load_dotenv
-    load_dotenv(BASE_DIR / '.env')
-except ImportError:
-    pass  # python-dotenv not installed, use system environment variables
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'iw*h!o%90q+fg1=pu_6y*p5fz$&gbk14ytyjwkal__va3xbgo(')
+SECRET_KEY = 'django-insecure-iw*h!o%90q+fg1=pu_6y*p5fz$&gbk14ytyjwkal__va3xbgo('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = True
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-
-# Add Railway.app domain if RAILWAY_STATIC_URL is present
-RAILWAY_STATIC_URL = os.getenv('RAILWAY_STATIC_URL', '')
-if RAILWAY_STATIC_URL:
-    ALLOWED_HOSTS.append(RAILWAY_STATIC_URL.replace('https://', '').replace('http://', ''))
-
-# Security settings for production
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = 'DENY'
-    SECURE_HSTS_SECONDS = 31536000
+ALLOWED_HOSTS = []
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
@@ -81,7 +60,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Serve static files
     # 'corsheaders.middleware.CorsMiddleware',  # CORS - disabled for local development
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -115,44 +93,12 @@ WSGI_APPLICATION = 'multibliz_pos.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Check for Railway DATABASE_URL first
-DATABASE_URL = os.getenv('DATABASE_URL', '')
-if DATABASE_URL:
-    # Parse Railway PostgreSQL URL
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    # Switch between SQLite (development) and PostgreSQL (production)
-    DB_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
-    
-    if DB_ENGINE == 'django.db.backends.postgresql':
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.getenv('DB_NAME', 'multibliz_pos'),
-                'USER': os.getenv('DB_USER', 'postgres'),
-                'PASSWORD': os.getenv('DB_PASSWORD', ''),
-                'HOST': os.getenv('DB_HOST', 'localhost'),
-                'PORT': os.getenv('DB_PORT', '5432'),
-                'OPTIONS': {
-                    'connect_timeout': 10,
-                },
-            }
-        }
-    else:
-        # SQLite for development
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
+}
 
 
 # Password validation
@@ -194,9 +140,6 @@ STATICFILES_DIRS = [
     BASE_DIR / 'Frontend',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# Whitenoise configuration for static files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Authentication settings
 AUTH_USER_MODEL = 'accounts.User'
