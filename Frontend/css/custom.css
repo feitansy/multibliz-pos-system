@@ -3921,3 +3921,475 @@ td.editable.saved {
 }
 
 .sales-table-scroll { scrollbar-width: thin; scrollbar-color: #667eea #eef2ff; }
+
+/* ============================================
+   COMPREHENSIVE RESPONSIVE DESIGN
+   Mobile, Tablet (iPad), and Desktop
+   ============================================ */
+
+/* Mobile First - Extra Small devices (phones, less than 576px) */
+@media (max-width: 575.98px) {
+  :root {
+    --sidebar-width: 0px;
+    --topbar-height: 60px;
+  }
+
+  /* Hide sidebar completely on mobile */
+  .modern-sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    z-index: 1050;
+  }
+
+  .modern-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Mobile overlay when sidebar is open */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+  }
+
+  /* Topbar adjustments */
+  .modern-topbar {
+    left: 0 !important;
+    padding: 0 15px;
+    height: 60px;
+  }
+
+  .page-title {
+    font-size: 16px;
+  }
+
+  .topbar-left i {
+    font-size: 20px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .topbar-user-btn {
+    padding: 8px !important;
+  }
+
+  /* Content area */
+  .modern-content {
+    margin-left: 0 !important;
+    padding: 15px !important;
+    padding-top: 75px !important;
+  }
+
+  /* Mobile menu button */
+  .mobile-menu-btn {
+    display: flex !important;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: var(--neutral-lighter);
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  /* Dashboard cards */
+  .stat-card, .dashboard-card {
+    margin-bottom: 15px;
+  }
+
+  .stat-value {
+    font-size: 24px !important;
+  }
+
+  /* Tables */
+  .table-responsive {
+    font-size: 13px;
+  }
+
+  .table th, .table td {
+    padding: 8px 10px !important;
+    white-space: nowrap;
+  }
+
+  /* Forms */
+  .form-control, .form-select {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 12px 15px;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  /* Cards */
+  .card {
+    border-radius: 12px;
+    margin-bottom: 15px;
+  }
+
+  .card-header {
+    padding: 15px;
+  }
+
+  .card-body {
+    padding: 15px;
+  }
+
+  /* POS Terminal */
+  .pos-container {
+    flex-direction: column !important;
+  }
+
+  .pos-products, .pos-cart {
+    width: 100% !important;
+    min-height: auto !important;
+  }
+
+  /* Settings page */
+  .settings-sidebar {
+    display: none;
+  }
+
+  /* Auth pages */
+  .auth-card {
+    margin: 10px;
+    padding: 20px !important;
+  }
+
+  /* Messages container */
+  .messages-container {
+    left: 10px !important;
+    right: 10px !important;
+    max-width: none !important;
+  }
+
+  /* Hide toggle button on mobile */
+  .sidebar-toggle {
+    display: none !important;
+  }
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  :root {
+    --sidebar-width: 0px;
+    --topbar-height: 60px;
+  }
+
+  .modern-sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    z-index: 1050;
+  }
+
+  .modern-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .modern-topbar {
+    left: 0 !important;
+    padding: 0 20px;
+  }
+
+  .modern-content {
+    margin-left: 0 !important;
+    padding: 20px !important;
+    padding-top: 80px !important;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .sidebar-toggle {
+    display: none !important;
+  }
+}
+
+/* Medium devices (tablets, iPads, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  :root {
+    --sidebar-width: 70px;
+    --topbar-height: 65px;
+  }
+
+  /* Collapsed sidebar by default on tablets */
+  .modern-sidebar {
+    width: 70px;
+  }
+
+  .modern-sidebar .sidebar-logo-text,
+  .modern-sidebar .sidebar-item span,
+  .modern-sidebar .sidebar-section-title span {
+    display: none;
+  }
+
+  .modern-sidebar .sidebar-header {
+    justify-content: center;
+    padding: 8px;
+  }
+
+  .modern-sidebar .sidebar-logo-img {
+    height: 32px !important;
+    max-width: 40px;
+  }
+
+  .modern-sidebar .sidebar-item {
+    justify-content: center;
+    padding: 14px 0;
+  }
+
+  .modern-sidebar .sidebar-item i {
+    font-size: 20px;
+  }
+
+  .modern-sidebar .sidebar-sub {
+    padding-left: 0;
+  }
+
+  .modern-sidebar .sidebar-section-title {
+    justify-content: center;
+    padding: 15px 0 8px 0;
+  }
+
+  .modern-topbar {
+    left: 70px;
+    padding: 0 20px;
+  }
+
+  .modern-content {
+    margin-left: 70px;
+    padding: 25px;
+    padding-top: 90px;
+  }
+
+  .sidebar-toggle {
+    display: none !important;
+  }
+
+  .mobile-menu-btn {
+    display: none !important;
+  }
+
+  /* Dashboard grid */
+  .row > [class*="col-lg-3"] {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  /* POS Terminal */
+  .pos-container {
+    flex-direction: column !important;
+  }
+
+  .pos-products, .pos-cart {
+    width: 100% !important;
+  }
+
+  /* Settings sidebar */
+  .settings-sidebar {
+    width: 60px !important;
+  }
+
+  .settings-sidebar span {
+    display: none;
+  }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  :root {
+    --sidebar-width: 220px;
+  }
+
+  .modern-sidebar {
+    width: 220px;
+  }
+
+  .modern-topbar {
+    left: 220px;
+  }
+
+  .modern-content {
+    margin-left: 220px;
+    padding: 30px;
+    padding-top: 95px;
+  }
+
+  .mobile-menu-btn {
+    display: none !important;
+  }
+
+  .sidebar-toggle {
+    left: 180px;
+  }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  :root {
+    --sidebar-width: 240px;
+  }
+
+  .modern-sidebar {
+    width: 240px;
+  }
+
+  .modern-topbar {
+    left: 240px;
+  }
+
+  .modern-content {
+    margin-left: 240px;
+    padding: 40px;
+    padding-top: 100px;
+  }
+
+  .mobile-menu-btn {
+    display: none !important;
+  }
+}
+
+/* iPad Pro and larger tablets (1024px width) */
+@media (min-width: 1024px) and (max-width: 1199.98px) and (min-height: 1300px) {
+  /* iPad Pro portrait mode */
+  :root {
+    --sidebar-width: 200px;
+  }
+
+  .modern-sidebar {
+    width: 200px;
+  }
+
+  .modern-topbar {
+    left: 200px;
+  }
+
+  .modern-content {
+    margin-left: 200px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .sidebar-item {
+    min-height: 48px;
+  }
+
+  .topbar-icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .form-control, .form-select {
+    min-height: 48px;
+  }
+
+  /* Remove hover effects on touch */
+  .sidebar-item:hover {
+    background: transparent;
+  }
+
+  .btn:hover {
+    transform: none;
+  }
+
+  /* Better tap feedback */
+  .btn:active,
+  .sidebar-item:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+
+/* Landscape mode for phones */
+@media (max-width: 915px) and (orientation: landscape) {
+  .modern-topbar {
+    height: 50px;
+  }
+
+  .modern-content {
+    padding-top: 65px !important;
+  }
+
+  .auth-container {
+    padding: 10px;
+  }
+
+  .auth-card {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* High DPI / Retina displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .sidebar-logo-img {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* Print styles for reports */
+@media print {
+  .modern-sidebar,
+  .modern-topbar,
+  .sidebar-toggle,
+  .mobile-menu-btn,
+  .btn,
+  .messages-container {
+    display: none !important;
+  }
+
+  .modern-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #ddd;
+  }
+}
+
+/* Ensure mobile menu button is hidden by default */
+.mobile-menu-btn {
+  display: none;
+}
+
+/* Safari-specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .modern-content {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
