@@ -11,7 +11,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             '--file',
-            default='data_export.json',
+            default='data_lean.json',
             help='JSON file to import from'
         )
 
@@ -30,13 +30,13 @@ class Command(BaseCommand):
         
         self.stdout.write(f'Found {len(data)} objects to import')
         
-        # Disable signals temporarily
-        from inventory.models import Stock
+        # Disable the auto-create stock signal
         from django.db.models.signals import post_save
-        from inventory.signals import create_stock_for_product
+        from inventory.models import create_stock_for_product
         
         # Disconnect the signal
-        post_save.disconnect(create_stock_for_product, sender=apps.get_model('inventory', 'Product'))
+        post_save.disconnect(create_stock_for_product, sender=apps.get_model('sales', 'Product'))
+        self.stdout.write('Disabled auto-create stock signal')
         
         try:
             with transaction.atomic():
@@ -50,15 +50,10 @@ class Command(BaseCommand):
                 
                 # Import order matters for foreign keys
                 import_order = [
-                    'accounts.user',
                     'inventory.supplier',
-                    'inventory.product',
+                    'sales.product',
                     'inventory.stock',
                     'sales.sale',
-                    'sales.saleitem',
-                    'audit.auditlog',
-                    'forecasting.forecastresult',
-                    'dashboard.dashboardmetric',
                 ]
                 
                 # Import in order
@@ -67,19 +62,12 @@ class Command(BaseCommand):
                         objects = objects_by_model[model_name]
                         self.stdout.write(f'Importing {len(objects)} {model_name} objects...')
                         
-                        # Skip if model already has data (except for admin user)
+                        # Skip if model already has data
                         app_label, model_label = model_name.split('.')
                         Model = apps.get_model(app_label, model_label)
                         
-                        if model_name == 'accounts.user':
-                            # Only import non-admin users
-                            existing_usernames = set(Model.objects.values_list('username', flat=True))
-                            objects = [o for o in objects if o['fields'].get('username') not in existing_usernames]
-                            if not objects:
-                                self.stdout.write(f'  Skipping - users already exist')
-                                continue
-                        elif Model.objects.exists():
-                            self.stdout.write(f'  Skipping - {model_name} already has data')
+                        if Model.objects.exists():
+                            self.stdout.write(self.style.WARNING(f'  Skipping - {model_name} already has data'))
                             continue
                         
                         # Deserialize and save
@@ -89,20 +77,13 @@ class Command(BaseCommand):
                         
                         self.stdout.write(self.style.SUCCESS(f'  Imported {len(objects)} objects'))
                 
-                # Import any remaining models
-                imported = set(import_order)
-                for model_name, objects in objects_by_model.items():
-                    if model_name not in imported:
-                        self.stdout.write(f'Importing {len(objects)} {model_name} objects...')
-                        json_str = json.dumps(objects)
-                        for obj in serializers.deserialize('json', json_str):
-                            try:
-                                obj.save()
-                            except Exception as e:
-                                self.stdout.write(self.style.WARNING(f'  Skipped object: {e}'))
-                        
             self.stdout.write(self.style.SUCCESS('Data import completed successfully!'))
+            
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f'Import failed: {e}'))
+            raise
             
         finally:
             # Reconnect the signal
-            post_save.connect(create_stock_for_product, sender=apps.get_model('inventory', 'Product'))
+            post_save.connect(create_stock_for_product, sender=apps.get_model('sales', 'Product'))
+            self.stdout.write('Re-enabled auto-create stock signal')
