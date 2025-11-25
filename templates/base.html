@@ -80,7 +80,7 @@
                 <i class="fas fa-bars"></i>
             </button>
             <i class="fas fa-th-large text-purple d-none d-md-block"></i>
-            <span class="page-title">{% block page_title %}Dashboard{% endblock %}</span>
+            <span class="page-title">{% block page_title %}{% if url_name == 'dashboard' %}Dashboard{% elif url_name == 'pos' %}POS Terminal{% elif url_name == 'sale_list' %}Sales Records{% elif url_name == 'sale_detail' or url_name == 'sale_update' %}Sale Details{% elif url_name == 'sale_create' %}New Sale{% elif url_name == 'product_list' %}Product Inventory{% elif url_name == 'product_create' %}Add Product{% elif url_name == 'product_update' %}Edit Product{% elif url_name == 'supplier_list' %}Suppliers{% elif url_name == 'supplier_create' %}Add Supplier{% elif url_name == 'supplier_update' %}Edit Supplier{% elif url_name == 'stock_list' %}Stock List{% elif url_name == 'stock_update' %}Update Stock{% elif url_name == 'return_list' %}Returns{% elif url_name == 'return_create' %}New Return{% elif url_name == 'return_detail' or url_name == 'return_update' %}Return Details{% elif url_name == 'forecasting' or url_name == 'forecast_list' %}Forecasting{% elif url_name == 'audit_log' %}Audit Trail{% elif url_name == 'user_settings' %}Settings{% elif url_name == 'edit_profile' %}Edit Profile{% elif url_name == 'change_password' %}Change Password{% else %}Dashboard{% endif %}{% endblock %}</span>
         </div>
         
         <div class="topbar-right">

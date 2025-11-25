@@ -311,11 +311,6 @@
                     <a href="{% url 'return_detail' return.id %}" class="action-btn btn-view" data-bs-toggle="tooltip" title="View Details">
                         <i class="fas fa-eye"></i> View
                     </a>
-                    {% if user.is_staff and user.is_superuser %}
-                        <a href="{% url 'return_update' return.id %}" class="action-btn btn-edit" data-bs-toggle="tooltip" title="Approve/Update Status">
-                            <i class="fas fa-edit"></i> {% if return.status == 'pending' %}Approve{% else %}Edit{% endif %}
-                        </a>
-                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

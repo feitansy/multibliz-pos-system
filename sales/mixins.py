@@ -10,6 +10,7 @@ class ProductMixin:
 
 class ProductListMixin(ProductMixin, ListView):
     context_object_name = 'products'
+    paginate_by = 25
 
 class ProductDetailMixin(ProductMixin, DetailView):
     pass

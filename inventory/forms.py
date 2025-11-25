@@ -51,7 +51,6 @@ class SupplierForm(forms.ModelForm):
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter supplier name',
-                'required': True,
             }),
             'contact_person': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -60,7 +59,6 @@ class SupplierForm(forms.ModelForm):
             'contact_email': forms.EmailInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter email address',
-                'required': True,
             }),
             'contact_phone': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -72,3 +70,42 @@ class SupplierForm(forms.ModelForm):
                 'rows': 3,
             }),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make all fields required
+        self.fields['name'].required = True
+        self.fields['contact_person'].required = True
+        self.fields['contact_email'].required = True
+        self.fields['contact_phone'].required = True
+        self.fields['address'].required = True
+    
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if not name or not name.strip():
+            raise forms.ValidationError('Company name is required.')
+        return name.strip()
+    
+    def clean_contact_person(self):
+        contact_person = self.cleaned_data.get('contact_person')
+        if not contact_person or not contact_person.strip():
+            raise forms.ValidationError('Contact person is required.')
+        return contact_person.strip()
+    
+    def clean_contact_email(self):
+        email = self.cleaned_data.get('contact_email')
+        if not email or not email.strip():
+            raise forms.ValidationError('Email address is required.')
+        return email.strip()
+    
+    def clean_contact_phone(self):
+        phone = self.cleaned_data.get('contact_phone')
+        if not phone or not phone.strip():
+            raise forms.ValidationError('Phone number is required.')
+        return phone.strip()
+    
+    def clean_address(self):
+        address = self.cleaned_data.get('address')
+        if not address or not address.strip():
+            raise forms.ValidationError('Address is required.')
+        return address.strip()

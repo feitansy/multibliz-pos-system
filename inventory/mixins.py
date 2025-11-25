@@ -8,6 +8,7 @@ class InventoryMixin:
 
 class InventoryListMixin(InventoryMixin, ListView):
     context_object_name = 'items'
+    paginate_by = 25
 
 class InventoryDetailMixin(InventoryMixin, DetailView):
     pass
