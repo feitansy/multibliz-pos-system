@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.contrib.auth.forms import SetPasswordForm
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
+import threading
 
 class SignUpView(CreateView):
     """
@@ -371,12 +372,13 @@ def forgot_password_request(request):
         # Generate OTP
         otp = PasswordResetOTP.create_for_user(user)
         
-        # Send OTP via Email
-        try:
-            from django.conf import settings
-            
-            subject = 'Password Reset OTP - Multibliz POS'
-            message = f'''
+        # Send OTP via Email (asynchronously to prevent timeout on Render)
+        def send_otp_email():
+            try:
+                from django.conf import settings
+                
+                subject = 'Password Reset OTP - Multibliz POS'
+                message = f'''
 Hello {user.username},
 
 You requested to reset your password. Your OTP code is:
@@ -389,56 +391,68 @@ If you did not request this, please ignore this email.
 
 Best regards,
 Multibliz POS Team
-            '''
-            
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
-            )
-        except Exception as e:
-            messages.error(request, f'Failed to send email: {str(e)}')
-        
-        # Send OTP via SMS (Twilio) - Optional
-        if user.phone:
-            try:
-                from django.conf import settings
-                from twilio.rest import Client
+                '''
                 
-                # Check if Twilio credentials are configured
-                if (hasattr(settings, 'TWILIO_ACCOUNT_SID') and 
-                    hasattr(settings, 'TWILIO_AUTH_TOKEN') and 
-                    hasattr(settings, 'TWILIO_PHONE_NUMBER') and
-                    settings.TWILIO_ACCOUNT_SID and 
-                    settings.TWILIO_AUTH_TOKEN and
-                    settings.TWILIO_PHONE_NUMBER and
-                    not settings.TWILIO_ACCOUNT_SID.startswith('your_') and
-                    not settings.TWILIO_AUTH_TOKEN.startswith('your_')):
-                    
-                    # Initialize Twilio client
-                    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-                    
-                    sms_message = f'Your Multibliz POS password reset OTP is: {otp.code}. Valid for 10 minutes.'
-                    
-                    message = client.messages.create(
-                        body=sms_message,
-                        from_=settings.TWILIO_PHONE_NUMBER,
-                        to=user.phone
-                    )
-                else:
-                    # Twilio not configured - silently skip SMS
-                    pass
-                
-            except ImportError:
-                # Twilio package not installed - silently skip SMS
-                pass
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=True,  # Changed to True for async - don't block request
+                )
             except Exception as e:
-                # SMS failed but don't block the password reset - email is primary
                 import logging
                 logger = logging.getLogger(__name__)
-                logger.warning(f'SMS sending failed: {str(e)}')
+                logger.error(f'Failed to send OTP email: {str(e)}')
+        
+        # Send email in background thread
+        import threading
+        email_thread = threading.Thread(target=send_otp_email, daemon=True)
+        email_thread.start()
+        
+        # Send OTP via SMS (Twilio) - Optional (asynchronously)
+        def send_otp_sms():
+            if user.phone:
+                try:
+                    from django.conf import settings
+                    from twilio.rest import Client
+                    
+                    # Check if Twilio credentials are configured
+                    if (hasattr(settings, 'TWILIO_ACCOUNT_SID') and 
+                        hasattr(settings, 'TWILIO_AUTH_TOKEN') and 
+                        hasattr(settings, 'TWILIO_PHONE_NUMBER') and
+                        settings.TWILIO_ACCOUNT_SID and 
+                        settings.TWILIO_AUTH_TOKEN and
+                        settings.TWILIO_PHONE_NUMBER and
+                        not settings.TWILIO_ACCOUNT_SID.startswith('your_') and
+                        not settings.TWILIO_AUTH_TOKEN.startswith('your_')):
+                        
+                        # Initialize Twilio client
+                        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+                        
+                        sms_message = f'Your Multibliz POS password reset OTP is: {otp.code}. Valid for 10 minutes.'
+                        
+                        message = client.messages.create(
+                            body=sms_message,
+                            from_=settings.TWILIO_PHONE_NUMBER,
+                            to=user.phone
+                        )
+                    else:
+                        # Twilio not configured - silently skip SMS
+                        pass
+                    
+                except ImportError:
+                    # Twilio package not installed - silently skip SMS
+                    pass
+                except Exception as e:
+                    # SMS failed but don't block the password reset - email is primary
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f'SMS sending failed: {str(e)}')
+        
+        # Send SMS in background thread
+        sms_thread = threading.Thread(target=send_otp_sms, daemon=True)
+        sms_thread.start()
         
         # Store user_id in session for verification step
         request.session['reset_user_id'] = user.id
