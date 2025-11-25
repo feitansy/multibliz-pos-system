@@ -14,15 +14,11 @@ class ProductDetailMixin(ProductMixin, DetailView):
     pass
 
 class ProductCreateMixin(ProductMixin, CreateView):
-    fields = ['name', 'description', 'price', 'category']
-
     def form_valid(self, form):
         messages.success(self.request, f"{self.model._meta.verbose_name} created successfully.")
         return super().form_valid(form)
 
 class ProductUpdateMixin(ProductMixin, UpdateView):
-    fields = ['name', 'description', 'price', 'category']
-
     def form_valid(self, form):
         messages.success(self.request, f"{self.model._meta.verbose_name} updated successfully.")
         return super().form_valid(form)

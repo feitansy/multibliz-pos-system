@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from accounts.permissions import AdminRequiredMixin, CanDeleteMixin
 from .models import Product, Sale, Return
+from .forms import ProductForm, SaleForm, ReturnForm
 from .mixins import ProductListMixin, ProductDetailMixin, ProductCreateMixin, ProductUpdateMixin, ProductDeleteMixin
 from django.db.models import Q
 from django.utils import timezone
@@ -25,11 +26,13 @@ class ProductDetailView(LoginRequiredMixin, ProductDetailMixin):
 class ProductCreateView(LoginRequiredMixin, ProductCreateMixin):
     model = Product
     template_name = 'sales/product_form.html'
+    form_class = ProductForm
     success_url = reverse_lazy('product_list')
 
 class ProductUpdateView(LoginRequiredMixin, ProductUpdateMixin):
     model = Product
     template_name = 'sales/product_form.html'
+    form_class = ProductForm
     success_url = reverse_lazy('product_list')
 
 class ProductDeleteView(LoginRequiredMixin, ProductDeleteMixin):
@@ -51,7 +54,7 @@ class SaleDetailView(LoginRequiredMixin, DetailView):
 class SaleCreateView(LoginRequiredMixin, CreateView):
     model = Sale
     template_name = 'sales/sale_form.html'
-    fields = ['product', 'quantity', 'total_price', 'customer_name']
+    form_class = SaleForm
     success_url = reverse_lazy('sale_list')
 
     def form_valid(self, form):
@@ -61,7 +64,7 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
 class SaleUpdateView(LoginRequiredMixin, UpdateView):
     model = Sale
     template_name = 'sales/sale_form.html'
-    fields = ['product', 'quantity', 'total_price', 'customer_name']
+    form_class = SaleForm
     success_url = reverse_lazy('sale_list')
 
     def form_valid(self, form):

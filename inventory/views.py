@@ -4,6 +4,7 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Supplier, Stock
+from .forms import StockForm, SupplierForm
 from .mixins import InventoryListMixin, InventoryDetailMixin, InventoryCreateMixin, InventoryUpdateMixin, InventoryDeleteMixin
 
 class SupplierListView(LoginRequiredMixin, InventoryListMixin):
@@ -18,13 +19,13 @@ class SupplierDetailView(LoginRequiredMixin, InventoryDetailMixin):
 class SupplierCreateView(LoginRequiredMixin, InventoryCreateMixin):
     model = Supplier
     template_name = 'inventory/supplier_form.html'
-    fields = ['name', 'contact_person', 'contact_email', 'contact_phone', 'address']
+    form_class = SupplierForm
     success_url = reverse_lazy('supplier_list')
 
 class SupplierUpdateView(LoginRequiredMixin, InventoryUpdateMixin):
     model = Supplier
     template_name = 'inventory/supplier_form.html'
-    fields = ['name', 'contact_person', 'contact_email', 'contact_phone', 'address']
+    form_class = SupplierForm
     success_url = reverse_lazy('supplier_list')
 
 class SupplierDeleteView(LoginRequiredMixin, InventoryDeleteMixin):
@@ -44,13 +45,13 @@ class StockDetailView(LoginRequiredMixin, InventoryDetailMixin):
 class StockCreateView(LoginRequiredMixin, InventoryCreateMixin):
     model = Stock
     template_name = 'inventory/stock_form.html'
-    fields = ['product', 'supplier', 'quantity', 'reorder_level']
+    form_class = StockForm
     success_url = reverse_lazy('stock_list')
 
 class StockUpdateView(LoginRequiredMixin, InventoryUpdateMixin):
     model = Stock
     template_name = 'inventory/stock_form.html'
-    fields = ['product', 'supplier', 'quantity', 'reorder_level']
+    form_class = StockForm
     success_url = reverse_lazy('stock_list')
 
 class StockDeleteView(LoginRequiredMixin, InventoryDeleteMixin):
