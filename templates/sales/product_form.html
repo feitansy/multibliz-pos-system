@@ -67,6 +67,24 @@
                             </div>
                         </div>
 
+                        <!-- Supplier (Optional) -->
+                        {% if form.supplier %}
+                        <div class="form-group mb-4">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">
+                                <i class="fas fa-truck text-success"></i>Supplier
+                                <span class="text-muted small">(Optional)</span>
+                            </label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="fas fa-exclamation-circle"></i>{{ form.supplier.errors.0 }}
+                                </div>
+                            {% else %}
+                                <small class="form-text">Supplier for this product</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
                         <!-- Buttons -->
                         <div class="d-flex gap-3 mt-5">
                             <button type="submit" class="btn btn-primary btn-lg flex-grow-1 rounded-2 shadow-sm">

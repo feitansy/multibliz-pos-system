@@ -1,9 +1,20 @@
 from django import forms
 from .models import Product, Sale, Return
+from inventory.models import Supplier
 
 
 class ProductForm(forms.ModelForm):
     """Form for creating and updating products"""
+    
+    # Add supplier field (stored on Stock model, not Product)
+    supplier = forms.ModelChoiceField(
+        queryset=Supplier.objects.all(),
+        required=False,
+        empty_label="Select a supplier (optional)",
+        widget=forms.Select(attrs={
+            'class': 'form-control form-select',
+        })
+    )
     
     class Meta:
         model = Product
