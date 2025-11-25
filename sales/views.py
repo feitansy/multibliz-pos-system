@@ -112,7 +112,15 @@ class POSView(LoginRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['products'] = Product.objects.all().order_by('name')
+        from inventory.models import Stock
+        from django.db.models import OuterRef, Subquery
+        
+        # Get products with stock quantity
+        stock_subquery = Stock.objects.filter(product=OuterRef('pk')).values('quantity')[:1]
+        products = Product.objects.annotate(
+            stock_quantity=Subquery(stock_subquery)
+        ).order_by('name')
+        context['products'] = products
         return context
 
 
@@ -127,20 +135,27 @@ def search_products(request):
     AJAX endpoint for real-time product search
     Returns matching products as JSON for autocomplete
     """
+    from inventory.models import Stock
+    from django.db.models import OuterRef, Subquery
+    
     query = request.GET.get('q', '').strip()
     
     if len(query) < 1:
         return JsonResponse({'results': []})
     
+    stock_subquery = Stock.objects.filter(product=OuterRef('pk')).values('quantity')[:1]
     products = Product.objects.filter(
         name__icontains=query
-    ).values('id', 'name', 'price').order_by('name')[:10]
+    ).annotate(
+        stock_quantity=Subquery(stock_subquery)
+    ).values('id', 'name', 'price', 'stock_quantity').order_by('name')[:10]
     
     results = [
         {
             'id': p['id'],
             'name': p['name'],
-            'price': str(p['price'])
+            'price': str(p['price']),
+            'stock': p['stock_quantity'] or 0
         }
         for p in products
     ]
@@ -174,6 +189,12 @@ def process_transaction(request):
         
         cart_items = data.get('items', [])
         customer_name = data.get('customer_name', '').strip() if data.get('customer_name') else ''
+        payment_method = data.get('payment_method', 'cash')
+        
+        # Validate payment method
+        valid_methods = ['cash', 'card', 'check']
+        if payment_method not in valid_methods:
+            payment_method = 'cash'
         
         if not cart_items or len(cart_items) == 0:
             return JsonResponse({
@@ -199,7 +220,8 @@ def process_transaction(request):
                     product=product,
                     quantity=quantity,
                     total_price=item_total,
-                    customer_name=customer_name
+                    customer_name=customer_name,
+                    payment_method=payment_method
                 )
                 
                 # Update stock inventory

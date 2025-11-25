@@ -46,6 +46,7 @@
                                 <th data-column="quantity" data-sortable="true">Quantity</th>
                                 <th data-column="total" data-sortable="true">Total Price</th>
                                 <th data-column="returned" data-sortable="true">Returned</th>
+                                <th data-column="payment" data-sortable="true">Payment</th>
                                 <th data-column="date" data-sortable="true">Date</th>
                                 <th data-column="customer" data-sortable="true">Customer</th>
                                 <th data-column="status" data-sortable="true">Status</th>
@@ -78,6 +79,25 @@
                                             <span class="text-muted small">—</span>
                                         {% endif %}
                                     </td>
+                                    <td data-column="payment">
+                                        {% if sale.payment_method == 'cash' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-money-bill-wave me-1"></i>Cash
+                                            </span>
+                                        {% elif sale.payment_method == 'card' %}
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-credit-card me-1"></i>Card
+                                            </span>
+                                        {% elif sale.payment_method == 'check' %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-file-invoice me-1"></i>Check
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-money-bill-wave me-1"></i>Cash
+                                            </span>
+                                        {% endif %}
+                                    </td>
                                     <td data-column="date" class="text-muted">
                                         <small>{{ sale.sale_date|date:"M d, Y" }}</small>
                                         <small class="d-block text-muted">{{ sale.sale_date|time:"H:i" }}</small>
@@ -104,9 +124,6 @@
                                         <a href="{% url 'sale_receipt' sale.pk %}" class="btn btn-sm btn-outline-success me-1" title="Print Receipt">
                                             <i class="fas fa-receipt"></i>
                                         </a>
-                                        <a href="{% url 'sale_update' sale.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
                                         {% if user.is_admin %}
                                             <a href="{% url 'sale_delete' sale.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
                                                 <i class="fas fa-trash"></i>
@@ -116,7 +133,7 @@
                                 </tr>
                             {% endfor %}
                             <tr id="sales-search-empty" class="d-none">
-                                <td colspan="8" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-muted">
                                     <i class="fas fa-search mb-2 d-block fs-4"></i>
                                     <span>No transactions match
                                         <span id="sales-search-term" class="fw-bold"></span>

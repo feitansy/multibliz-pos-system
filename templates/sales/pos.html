@@ -52,19 +52,35 @@
                 <!-- Product Grid -->
                 <div class="pos-products-grid" id="productsGrid">
                     {% for product in products %}
+                        {% with stock=product.stock_quantity|default:0 %}
                         <div 
-                            class="pos-product-card" 
-                            onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }})"
+                            class="pos-product-card {% if stock == 0 %}pos-product-out-of-stock{% endif %}"
+                            {% if stock > 0 %}
+                            onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, {{ stock }})"
+                            {% else %}
+                            onclick="showOutOfStockAlert('{{ product.name }}')"
+                            {% endif %}
                             data-product-id="{{ product.id }}"
                             data-product-name="{{ product.name }}"
                             data-product-price="{{ product.price }}"
+                            data-product-stock="{{ stock }}"
                         >
+                            {% if stock == 0 %}
+                            <div class="pos-product-out-of-stock-badge">OUT OF STOCK</div>
+                            {% elif stock <= 5 %}
+                            <div class="pos-product-low-stock-badge">{{ stock }} left</div>
+                            {% endif %}
                             <div class="pos-product-price">₱{{ product.price }}</div>
                             <div class="pos-product-name">{{ product.name }}</div>
                             <div class="pos-product-action">
+                                {% if stock > 0 %}
                                 <i class="fas fa-plus-circle"></i>
+                                {% else %}
+                                <i class="fas fa-ban text-danger"></i>
+                                {% endif %}
                             </div>
                         </div>
+                        {% endwith %}
                     {% endfor %}
                 </div>
             </div>
@@ -406,6 +422,63 @@
 
     .pos-product-card:hover .pos-product-action {
         opacity: 1;
+    }
+
+    /* Out of Stock Styles */
+    .pos-product-out-of-stock {
+        opacity: 0.6;
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+        border-color: #d1d5db !important;
+        cursor: not-allowed;
+    }
+
+    .pos-product-out-of-stock:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: #ef4444 !important;
+        background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
+    }
+
+    .pos-product-out-of-stock .pos-product-price {
+        color: #9ca3af;
+    }
+
+    .pos-product-out-of-stock-badge {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #ef4444;
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0.25rem;
+        text-align: center;
+        letter-spacing: 0.5px;
+    }
+
+    .pos-product-low-stock-badge {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #f59e0b;
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0.25rem;
+        text-align: center;
+    }
+
+    .pos-search-result-out-of-stock {
+        opacity: 0.6;
+        background: #fef2f2 !important;
+        cursor: not-allowed;
+    }
+
+    .pos-search-result-out-of-stock:hover {
+        background: #fee2e2 !important;
     }
 
     /* Cart Panel */
@@ -760,6 +833,7 @@
 <script>
 // Cart Data
 let cart = [];
+let currentPaymentMethod = 'cash';
 const STORAGE_KEY = 'pos_cart_data';
 
 // Initialize
@@ -799,17 +873,29 @@ function setupEventListeners() {
 }
 
 // Cart Management
-function addToCart(productId, productName, price) {
+function addToCart(productId, productName, price, stock) {
+    // Check if product is out of stock
+    if (stock <= 0) {
+        showOutOfStockAlert(productName);
+        return;
+    }
+    
     const existingItem = cart.find(item => item.product_id === productId);
     
     if (existingItem) {
+        // Check if adding more would exceed stock
+        if (existingItem.quantity >= stock) {
+            showToast(`Cannot add more ${productName}. Only ${stock} in stock.`, 'error');
+            return;
+        }
         existingItem.quantity += 1;
     } else {
         cart.push({
             product_id: productId,
             name: productName,
             price: parseFloat(price),
-            quantity: 1
+            quantity: 1,
+            stock: stock
         });
     }
     
@@ -817,6 +903,10 @@ function addToCart(productId, productName, price) {
     updateDisplay();
     document.getElementById('productSearch').value = '';
     document.getElementById('searchResults').innerHTML = '';
+}
+
+function showOutOfStockAlert(productName) {
+    showToast(`${productName} is out of stock!`, 'error');
 }
 
 function removeFromCart(productId) {
@@ -961,7 +1051,8 @@ function completeTransaction(event) {
             quantity: item.quantity,
             price: item.price
         })),
-        customer_name: customerName
+        customer_name: customerName,
+        payment_method: currentPaymentMethod
     };
 
     console.log('=== Transaction Debug ===');
@@ -1053,12 +1144,22 @@ function searchProductsAjax(query) {
         .then(data => {
             const resultsContainer = document.getElementById('searchResults');
             if (data.results.length > 0) {
-                resultsContainer.innerHTML = data.results.map(product => `
-                    <div class="pos-search-result-item" onclick="addToCart(${product.id}, '${product.name}', ${product.price}); document.getElementById('searchResults').innerHTML = '';">
-                        <strong>${product.name}</strong>
-                        <small>₱${parseFloat(product.price).toFixed(2)}</small>
-                    </div>
-                `).join('');
+                resultsContainer.innerHTML = data.results.map(product => {
+                    const isOutOfStock = product.stock <= 0;
+                    const stockBadge = isOutOfStock 
+                        ? '<span class="badge bg-danger ms-2">Out of Stock</span>' 
+                        : (product.stock <= 5 ? `<span class="badge bg-warning ms-2">${product.stock} left</span>` : '');
+                    
+                    return `
+                        <div class="pos-search-result-item ${isOutOfStock ? 'pos-search-result-out-of-stock' : ''}" 
+                             onclick="${isOutOfStock ? `showOutOfStockAlert('${product.name}')` : `addToCart(${product.id}, '${product.name}', ${product.price}, ${product.stock}); document.getElementById('searchResults').innerHTML = '';`}">
+                            <div>
+                                <strong>${product.name}</strong>${stockBadge}
+                            </div>
+                            <small>₱${parseFloat(product.price).toFixed(2)}</small>
+                        </div>
+                    `;
+                }).join('');
             } else {
                 resultsContainer.innerHTML = '<div class="pos-search-result-item" style="text-align: center; color: #9ca3af;">No products found</div>';
             }
@@ -1104,6 +1205,9 @@ function togglePaymentMethods() {
 }
 
 function setPaymentMethod(method) {
+    // Store the current payment method
+    currentPaymentMethod = method;
+    
     // Update display
     const display = document.getElementById('paymentMethodDisplay');
     const methodLabel = method.charAt(0).toUpperCase() + method.slice(1);
