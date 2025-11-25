@@ -29,7 +29,7 @@
                         <h5 class="mb-0 fw-bold">Sales History</h5>
                     </div>
                     <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-3 ms-lg-auto w-100 w-lg-auto justify-content-end">
-                        <span class="badge bg-secondary text-uppercase letter-spacing-sm" id="sales-count-badge">{{ sales|length }} transactions</span>
+                        <span class="badge bg-secondary text-uppercase letter-spacing-sm" id="sales-count-badge" data-total="{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ sales|length }}{% endif %}">{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ sales|length }}{% endif %} transactions</span>
                         <div class="sales-search-wrapper flex-grow-1 flex-sm-grow-0">
                             <i class="fas fa-search"></i>
                             <input type="text" class="form-control sales-search-input" id="sales-search-input" placeholder="   Search transactions">
@@ -127,6 +127,64 @@
                     </table>
                 </div>
             </div>
+            
+            <!-- Pagination Controls -->
+            {% if page_obj and page_obj.paginator.num_pages > 1 %}
+            <div class="card-footer bg-white border-top p-3">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
+                    <div class="text-muted small">
+                        Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} transactions
+                    </div>
+                    <nav aria-label="Sales pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1" aria-label="First">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
         </div>
     {% else %}
         <div class="text-center py-5">
@@ -151,15 +209,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const emptyState = document.getElementById('sales-search-empty');
     const searchTerm = document.getElementById('sales-search-term');
     const countBadge = document.getElementById('sales-count-badge');
+    // Use server-provided total (from paginator) or fall back to visible rows
+    const serverTotal = countBadge ? parseInt(countBadge.dataset.total, 10) : tableRows.length;
     const totalRows = tableRows.length;
 
-    const updateBadge = (count) => {
+    const updateBadge = (count, isFiltered = false) => {
         if (!countBadge) return;
         const label = count === 1 ? 'transaction' : 'transactions';
-        countBadge.textContent = `${count} ${label}`;
+        if (isFiltered && count !== serverTotal) {
+            countBadge.textContent = `${count} of ${serverTotal} ${label}`;
+        } else {
+            countBadge.textContent = `${serverTotal} ${label}`;
+        }
     };
 
-    updateBadge(totalRows);
+    updateBadge(serverTotal, false);
 
     searchInput.addEventListener('input', function () {
         const query = this.value.trim().toLowerCase();
@@ -183,10 +247,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (!query) {
-            visibleCount = totalRows;
+            visibleCount = serverTotal;
+            updateBadge(serverTotal, false);
+        } else {
+            updateBadge(visibleCount, true);
         }
-
-        updateBadge(visibleCount);
     });
 });
 </script>
