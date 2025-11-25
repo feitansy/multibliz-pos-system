@@ -29,10 +29,13 @@
                         </button>
                     </div>
                 </div>
-            </form>
-            <div class="row g-3 align-items-center">
-                            {% if product.category and product.category not in seen_categories %}
-                                <option value="{{ product.category }}">{{ product.category }}</option>
+                <div class="col-12 col-md-3 col-lg-2">
+                    <select id="categoryFilter" class="form-select" onchange="filterProducts()">
+                        <option value="">All Categories</option>
+                        {% regroup object_list by category as products_by_category %}
+                        {% for category in products_by_category %}
+                            {% if category.grouper %}
+                                <option value="{{ category.grouper }}">{{ category.grouper }}</option>
                             {% endif %}
                         {% endfor %}
                     </select>
@@ -48,7 +51,7 @@
                 <div class="col-auto ms-lg-auto">
                     <span id="resultCount" class="text-muted small"></span>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
