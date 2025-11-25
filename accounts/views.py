@@ -372,47 +372,56 @@ def forgot_password_request(request):
         # Generate OTP
         otp = PasswordResetOTP.create_for_user(user)
         
+        # Store values for thread closure (avoid reference issues)
+        user_username = user.username
+        user_email = user.email
+        otp_code = otp.code
+        
         # Send OTP via Email (asynchronously to prevent timeout on Render)
         def send_otp_email():
             try:
+                from django.core.mail import EmailMessage
                 from django.conf import settings
+                import django
+                django.setup()  # Ensure Django is properly set up in thread
                 
                 subject = 'Password Reset OTP - Multibliz POS'
-                message = f'''
-Hello {user.username},
+                message = f'''Hello {user_username},
 
 You requested to reset your password. Your OTP code is:
 
-{otp.code}
+{otp_code}
 
 This code is valid for 10 minutes.
 
 If you did not request this, please ignore this email.
 
 Best regards,
-Multibliz POS Team
-                '''
+Multibliz POS Team'''
                 
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=True,  # Changed to True for async - don't block request
+                email = EmailMessage(
+                    subject=subject,
+                    body=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user_email],
                 )
+                email.send(fail_silently=False)
+                
             except Exception as e:
                 import logging
                 logger = logging.getLogger(__name__)
-                logger.error(f'Failed to send OTP email: {str(e)}')
+                logger.error(f'Failed to send OTP email to {user_email}: {str(e)}')
         
         # Send email in background thread
-        import threading
         email_thread = threading.Thread(target=send_otp_email, daemon=True)
         email_thread.start()
         
+        # Store phone for SMS thread closure
+        user_phone = user.phone
+        
         # Send OTP via SMS (Twilio) - Optional (asynchronously)
         def send_otp_sms():
-            if user.phone:
+            if user_phone:
                 try:
                     from django.conf import settings
                     from twilio.rest import Client
@@ -430,12 +439,12 @@ Multibliz POS Team
                         # Initialize Twilio client
                         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
                         
-                        sms_message = f'Your Multibliz POS password reset OTP is: {otp.code}. Valid for 10 minutes.'
+                        sms_message = f'Your Multibliz POS password reset OTP is: {otp_code}. Valid for 10 minutes.'
                         
                         message = client.messages.create(
                             body=sms_message,
                             from_=settings.TWILIO_PHONE_NUMBER,
-                            to=user.phone
+                            to=user_phone
                         )
                     else:
                         # Twilio not configured - silently skip SMS

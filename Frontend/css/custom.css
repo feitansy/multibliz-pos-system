@@ -1147,9 +1147,51 @@ button {
   max-width: 520px;
 }
 
-/* Wider wrapper for signup page */
+/* Wider wrapper for signup page - reduced to not overlap */
 .auth-signup .auth-wrapper {
-  max-width: 600px;
+  max-width: 540px;
+}
+
+/* Compact styles for signup form */
+.auth-header-compact {
+  padding: 1.5rem 2rem 1rem !important;
+}
+
+.auth-header-compact .auth-logo {
+  width: 50px;
+  height: 50px;
+  font-size: 1.25rem;
+}
+
+.auth-header-compact .auth-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.auth-header-compact .auth-subtitle {
+  font-size: 0.875rem;
+}
+
+.auth-body-compact {
+  padding: 1rem 2rem 1.5rem !important;
+}
+
+.form-group-compact {
+  margin-bottom: 0.75rem !important;
+}
+
+.form-group-compact .form-label {
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.form-group-compact .form-control {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.auth-signup .auth-divider {
+  margin: 0.75rem 0;
 }
 
 .auth-card {
