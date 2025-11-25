@@ -50,8 +50,16 @@ class InventoryListMixin(InventoryMixin, ListView):
         context['selected_stock_status'] = self.request.GET.get('stock_status', '')
         
         # Get all unique categories from products that have stock
-        all_categories = self.model.objects.values_list('product__category', flat=True).distinct().filter(product__category__isnull=False).exclude(product__category='')
-        context['all_categories'] = sorted(all_categories)
+        # Check if this is Stock model (has product foreign key)
+        try:
+            from inventory.models import Stock
+            if self.model == Stock:
+                all_categories = Stock.objects.values_list('product__category', flat=True).distinct().filter(product__category__isnull=False).exclude(product__category='')
+                context['all_categories'] = sorted(set(all_categories))
+            else:
+                context['all_categories'] = []
+        except:
+            context['all_categories'] = []
         
         return context
 
