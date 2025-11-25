@@ -9,7 +9,6 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.contrib.auth.forms import SetPasswordForm
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
-import threading
 
 class SignUpView(CreateView):
     """
@@ -372,25 +371,18 @@ def forgot_password_request(request):
         # Generate OTP
         otp = PasswordResetOTP.create_for_user(user)
         
-        # Store values for thread closure (avoid reference issues)
-        user_username = user.username
-        user_email = user.email
-        otp_code = otp.code
-        
-        # Send OTP via Email (asynchronously to prevent timeout on Render)
-        def send_otp_email():
-            try:
-                from django.core.mail import EmailMessage
-                from django.conf import settings
-                import django
-                django.setup()  # Ensure Django is properly set up in thread
-                
-                subject = 'Password Reset OTP - Multibliz POS'
-                message = f'''Hello {user_username},
+        # Send OTP via Email (synchronous - more reliable on Render)
+        email_sent = False
+        try:
+            from django.core.mail import EmailMessage
+            from django.conf import settings
+            
+            subject = 'Password Reset OTP - Multibliz POS'
+            message = f'''Hello {user.username},
 
 You requested to reset your password. Your OTP code is:
 
-{otp_code}
+{otp.code}
 
 This code is valid for 10 minutes.
 
@@ -398,76 +390,65 @@ If you did not request this, please ignore this email.
 
 Best regards,
 Multibliz POS Team'''
+            
+            email = EmailMessage(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email],
+            )
+            email.send(fail_silently=False)
+            email_sent = True
+            
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'Failed to send OTP email to {user.email}: {str(e)}')
+        
+        # Send OTP via SMS (Twilio) - Optional, skip if not configured
+        if user.phone:
+            try:
+                from django.conf import settings
+                from twilio.rest import Client
                 
-                email = EmailMessage(
-                    subject=subject,
-                    body=message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[user_email],
-                )
-                email.send(fail_silently=False)
-                
+                # Check if Twilio credentials are configured
+                if (hasattr(settings, 'TWILIO_ACCOUNT_SID') and 
+                    hasattr(settings, 'TWILIO_AUTH_TOKEN') and 
+                    hasattr(settings, 'TWILIO_PHONE_NUMBER') and
+                    settings.TWILIO_ACCOUNT_SID and 
+                    settings.TWILIO_AUTH_TOKEN and
+                    settings.TWILIO_PHONE_NUMBER and
+                    not settings.TWILIO_ACCOUNT_SID.startswith('your_') and
+                    not settings.TWILIO_AUTH_TOKEN.startswith('your_')):
+                    
+                    # Initialize Twilio client
+                    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+                    
+                    sms_message = f'Your Multibliz POS password reset OTP is: {otp.code}. Valid for 10 minutes.'
+                    
+                    client.messages.create(
+                        body=sms_message,
+                        from_=settings.TWILIO_PHONE_NUMBER,
+                        to=user.phone
+                    )
+                    
+            except ImportError:
+                # Twilio package not installed - silently skip SMS
+                pass
             except Exception as e:
+                # SMS failed but don't block the password reset - email is primary
                 import logging
                 logger = logging.getLogger(__name__)
-                logger.error(f'Failed to send OTP email to {user_email}: {str(e)}')
-        
-        # Send email in background thread
-        email_thread = threading.Thread(target=send_otp_email, daemon=True)
-        email_thread.start()
-        
-        # Store phone for SMS thread closure
-        user_phone = user.phone
-        
-        # Send OTP via SMS (Twilio) - Optional (asynchronously)
-        def send_otp_sms():
-            if user_phone:
-                try:
-                    from django.conf import settings
-                    from twilio.rest import Client
-                    
-                    # Check if Twilio credentials are configured
-                    if (hasattr(settings, 'TWILIO_ACCOUNT_SID') and 
-                        hasattr(settings, 'TWILIO_AUTH_TOKEN') and 
-                        hasattr(settings, 'TWILIO_PHONE_NUMBER') and
-                        settings.TWILIO_ACCOUNT_SID and 
-                        settings.TWILIO_AUTH_TOKEN and
-                        settings.TWILIO_PHONE_NUMBER and
-                        not settings.TWILIO_ACCOUNT_SID.startswith('your_') and
-                        not settings.TWILIO_AUTH_TOKEN.startswith('your_')):
-                        
-                        # Initialize Twilio client
-                        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-                        
-                        sms_message = f'Your Multibliz POS password reset OTP is: {otp_code}. Valid for 10 minutes.'
-                        
-                        message = client.messages.create(
-                            body=sms_message,
-                            from_=settings.TWILIO_PHONE_NUMBER,
-                            to=user_phone
-                        )
-                    else:
-                        # Twilio not configured - silently skip SMS
-                        pass
-                    
-                except ImportError:
-                    # Twilio package not installed - silently skip SMS
-                    pass
-                except Exception as e:
-                    # SMS failed but don't block the password reset - email is primary
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.warning(f'SMS sending failed: {str(e)}')
-        
-        # Send SMS in background thread
-        sms_thread = threading.Thread(target=send_otp_sms, daemon=True)
-        sms_thread.start()
+                logger.warning(f'SMS sending failed: {str(e)}')
         
         # Store user_id in session for verification step
         request.session['reset_user_id'] = user.id
         request.session['otp_sent_time'] = str(otp.created_at)
         
-        messages.success(request, 'OTP code has been sent to your email.')
+        if email_sent:
+            messages.success(request, 'OTP code has been sent to your email.')
+        else:
+            messages.warning(request, 'OTP created but email may be delayed. Please check your inbox.')
         return redirect('verify_otp')
     
     return render(request, 'accounts/forgot_password_request.html')
