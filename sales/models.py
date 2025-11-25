@@ -20,6 +20,34 @@ class Sale(models.Model):
 
     def __str__(self):
         return f"Sale of {self.product.name} - {self.quantity} units"
+    
+    @property
+    def has_approved_return(self):
+        """Check if this sale has any approved or completed returns"""
+        return self.returns.filter(status__in=['approved', 'completed']).exists()
+    
+    @property
+    def total_returned_quantity(self):
+        """Get total quantity returned for this sale (approved/completed only)"""
+        from django.db.models import Sum
+        result = self.returns.filter(status__in=['approved', 'completed']).aggregate(
+            total=Sum('quantity_returned')
+        )['total']
+        return result or 0
+    
+    @property
+    def total_refunded_amount(self):
+        """Get total refund amount for this sale (approved/completed only)"""
+        from django.db.models import Sum
+        result = self.returns.filter(status__in=['approved', 'completed']).aggregate(
+            total=Sum('refund_amount')
+        )['total']
+        return result or 0
+    
+    @property
+    def net_total(self):
+        """Get net total after returns"""
+        return self.total_price - self.total_refunded_amount
 
 class Return(models.Model):
     STATUS_CHOICES = [

@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -343,12 +343,29 @@ class ReturnUpdateView(LoginRequiredMixin, UpdateView):
     fields = ['status', 'reason_details', 'refund_amount']
     success_url = reverse_lazy('return_list')
     
+    def dispatch(self, request, *args, **kwargs):
+        # Only admin/superuser can update return status
+        if not (request.user.is_staff and request.user.is_superuser):
+            messages.error(request, "Only administrators can approve or update return status.")
+            return redirect('return_list')
+        return super().dispatch(request, *args, **kwargs)
+    
     def form_valid(self, form):
         # Update processed date when status changes
         if 'status' in form.changed_data:
             form.instance.processed_date = timezone.now()
             form.instance.processed_by = self.request.user.username
-        
-        messages.success(self.request, "Return updated successfully.")
+            
+            new_status = form.cleaned_data.get('status')
+            if new_status == 'approved':
+                messages.success(self.request, f"Return #{self.object.id} has been APPROVED. Refund of ₱{self.object.refund_amount} will be reflected in sales.")
+            elif new_status == 'rejected':
+                messages.warning(self.request, f"Return #{self.object.id} has been REJECTED.")
+            elif new_status == 'completed':
+                messages.success(self.request, f"Return #{self.object.id} has been marked as COMPLETED.")
+            else:
+                messages.info(self.request, "Return updated successfully.")
+        else:
+            messages.success(self.request, "Return updated successfully.")
         return super().form_valid(form)
 

@@ -45,6 +45,7 @@
                                 <th data-column="product" data-sortable="true">Product</th>
                                 <th data-column="quantity" data-sortable="true">Quantity</th>
                                 <th data-column="total" data-sortable="true">Total Price</th>
+                                <th data-column="returned" data-sortable="true">Returned</th>
                                 <th data-column="date" data-sortable="true">Date</th>
                                 <th data-column="customer" data-sortable="true">Customer</th>
                                 <th data-column="status" data-sortable="true">Status</th>
@@ -53,13 +54,30 @@
                         </thead>
                         <tbody>
                             {% for sale in sales %}
-                                <tr class="table-row-healthy">
+                                <tr class="{% if sale.has_approved_return %}table-row-warning{% else %}table-row-healthy{% endif %}">
                                     <td data-column="product">
-                                        <span class="status-indicator-dot status-healthy"></span>
+                                        <span class="status-indicator-dot {% if sale.has_approved_return %}status-warning{% else %}status-healthy{% endif %}"></span>
                                         <strong>{{ sale.product.name }}</strong>
                                     </td>
                                     <td data-column="quantity" class="fw-bold">{{ sale.quantity }} units</td>
-                                    <td data-column="total" class="fw-bold text-success">₱{{ sale.total_price|floatformat:2 }}</td>
+                                    <td data-column="total">
+                                        {% if sale.has_approved_return %}
+                                            <span class="text-decoration-line-through text-muted">₱{{ sale.total_price|floatformat:2 }}</span>
+                                            <span class="fw-bold text-success d-block">₱{{ sale.net_total|floatformat:2 }}</span>
+                                        {% else %}
+                                            <span class="fw-bold text-success">₱{{ sale.total_price|floatformat:2 }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-column="returned">
+                                        {% if sale.has_approved_return %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-undo me-1"></i>{{ sale.total_returned_quantity }} unit{{ sale.total_returned_quantity|pluralize }}
+                                            </span>
+                                            <small class="d-block text-danger">-₱{{ sale.total_refunded_amount|floatformat:2 }}</small>
+                                        {% else %}
+                                            <span class="text-muted small">—</span>
+                                        {% endif %}
+                                    </td>
                                     <td data-column="date" class="text-muted">
                                         <small>{{ sale.sale_date|date:"M d, Y" }}</small>
                                         <small class="d-block text-muted">{{ sale.sale_date|time:"H:i" }}</small>
@@ -72,9 +90,15 @@
                                         {% endif %}
                                     </td>
                                     <td data-column="status">
-                                        <span class="badge status-badge status-badge-healthy">
-                                            <i class="fas fa-check-circle me-1"></i>COMPLETED
-                                        </span>
+                                        {% if sale.has_approved_return %}
+                                            <span class="badge status-badge status-badge-warning">
+                                                <i class="fas fa-undo me-1"></i>RETURNED
+                                            </span>
+                                        {% else %}
+                                            <span class="badge status-badge status-badge-healthy">
+                                                <i class="fas fa-check-circle me-1"></i>COMPLETED
+                                            </span>
+                                        {% endif %}
                                     </td>
                                     <td data-column="actions">
                                         <a href="{% url 'sale_receipt' sale.pk %}" class="btn btn-sm btn-outline-success me-1" title="Print Receipt">
@@ -92,7 +116,7 @@
                                 </tr>
                             {% endfor %}
                             <tr id="sales-search-empty" class="d-none">
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="8" class="text-center py-4 text-muted">
                                     <i class="fas fa-search mb-2 d-block fs-4"></i>
                                     <span>No transactions match
                                         <span id="sales-search-term" class="fw-bold"></span>
