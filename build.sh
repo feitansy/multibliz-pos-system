@@ -10,3 +10,6 @@ python manage.py collectstatic --noinput
 
 # Run migrations
 python manage.py migrate --noinput
+
+# Create default admin user
+python manage.py create_default_admin
