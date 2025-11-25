@@ -14,7 +14,7 @@ python manage.py migrate --noinput
 # Create default admin user
 python manage.py create_default_admin
 
-# Import essential data (only 77 products with sales - lean version)
-if [ -f "data_lean.json" ]; then
-    python manage.py import_data --file=data_lean.json
+# Import enhanced data (77 products + 1496 sales with historical data for forecasting)
+if [ -f "data_enhanced.json" ]; then
+    python manage.py import_data --file=data_enhanced.json
 fi
