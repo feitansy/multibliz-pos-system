@@ -22,10 +22,13 @@ class CustomUserCreationForm(UserCreationForm):
     
     def save(self, commit=True):
         """
-        Override save to automatically assign staff role to new users.
+        Override save to create regular users (not staff/admin).
+        New users get the 'staff' role but NOT Django's is_staff permission.
+        Only superusers/admins should have is_staff=True.
         """
         user = super().save(commit=False)
-        user.is_staff = True  # Automatically assign staff role
+        user.is_staff = False  # Regular users should NOT have admin access
+        user.role = 'staff'    # Default role is staff (not admin)
         if commit:
             user.save()
         return user
