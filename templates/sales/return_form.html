@@ -249,7 +249,7 @@
             <label for="{{ form.refund_amount.id_for_label }}">
                 Refund Amount (₱) <span class="required-indicator">*</span>
             </label>
-            {{ form.refund_amount|add_class:"form-control" }}
+            <input type="number" id="{{ form.refund_amount.id_for_label }}" name="{{ form.refund_amount.name }}" class="form-control" step="0.01" min="0" readonly>
             {% if form.refund_amount.errors %}
                 <ul class="errorlist">
                     {% for error in form.refund_amount.errors %}
