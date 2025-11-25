@@ -249,7 +249,7 @@
             <label for="{{ form.refund_amount.id_for_label }}">
                 Refund Amount (₱) <span class="required-indicator">*</span>
             </label>
-            {{ form.refund_amount }}
+            {{ form.refund_amount|add_class:"form-control" }}
             {% if form.refund_amount.errors %}
                 <ul class="errorlist">
                     {% for error in form.refund_amount.errors %}
@@ -257,7 +257,7 @@
                     {% endfor %}
                 </ul>
             {% endif %}
-            <small class="helptext">Amount to be refunded to customer</small>
+            <small class="helptext">Amount to be refunded to customer (auto-calculated)</small>
         </div>
         {% else %}
         <!-- Update form shows different fields -->
@@ -506,6 +506,9 @@
                 
                 const refundAmount = Math.min(quantity, maxQuantity) * unitPrice;
                 refundInput.value = refundAmount.toFixed(2);
+                
+                // Make refund amount readonly since it's auto-calculated
+                refundInput.readOnly = true;
             }
         }
         {% endif %}

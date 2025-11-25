@@ -307,41 +307,6 @@
 
     <!-- Bottom Row -->
     <div class="row g-4">
-        <!-- Inventory Alerts -->
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom p-4">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fas fa-boxes text-primary fs-6"></i>
-                        <h5 class="mb-0 fw-bold">Inventory Alerts</h5>
-                    </div>
-                </div>
-                <div class="card-body p-4">
-                    {% if low_stock_items %}
-                        <div class="row g-3">
-                            {% for item in low_stock_items %}
-                                <div class="col-12 col-md-6 col-lg-4">
-                                    <div class="alert alert-warning border-0 mb-0 h-100 d-flex flex-column justify-content-between">
-                                        <div>
-                                            <strong class="d-block mb-2">{{ item.product.name }}</strong>
-                                            <small class="text-dark opacity-75">Only {{ item.quantity }} units remaining</small>
-                                        </div>
-                                        <a href="{% url 'stock_update' item.id %}" class="btn btn-sm btn-warning text-white mt-3 align-self-start">
-                                            <i class="fas fa-edit me-1"></i>Update
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-check-circle fa-4x text-success mb-3 opacity-50"></i>
-                            <p class="text-success fw-500 mb-0">All inventory levels are healthy!</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 </div>

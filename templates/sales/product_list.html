@@ -17,22 +17,20 @@
     <!-- Search and Filter Bar -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-3">
-            <div class="row g-3 align-items-center">
+            <form method="GET" class="row g-3 align-items-center">
                 <div class="col-12 col-md-6 col-lg-4">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="fas fa-search text-muted"></i>
                         </span>
-                        <input type="text" id="productSearch" class="form-control border-start-0 ps-0" placeholder="Search products by name, category..." onkeyup="filterProducts()">
-                        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()" title="Clear search">
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search products by name, category..." value="{{ search_query }}">
+                        <button class="btn btn-outline-secondary" type="button" onclick="document.querySelector('input[name=search]').value=''; this.form.submit();" title="Clear search">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
-                <div class="col-12 col-md-3 col-lg-2">
-                    <select id="categoryFilter" class="form-select" onchange="filterProducts()">
-                        <option value="">All Categories</option>
-                        {% for product in object_list %}
+            </form>
+            <div class="row g-3 align-items-center">
                             {% if product.category and product.category not in seen_categories %}
                                 <option value="{{ product.category }}">{{ product.category }}</option>
                             {% endif %}
@@ -210,82 +208,6 @@ document.addEventListener('DOMContentLoaded', function() {
         option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
         categoryFilter.appendChild(option);
     });
-    
-    // Update result count on load
-    updateResultCount();
-});
-
-function filterProducts() {
-    const searchInput = document.getElementById('productSearch').value.toLowerCase().trim();
-    const categoryFilter = document.getElementById('categoryFilter').value.toLowerCase();
-    const stockFilter = document.getElementById('stockFilter').value.toLowerCase();
-    const rows = document.querySelectorAll('.product-row');
-    
-    let visibleCount = 0;
-    
-    rows.forEach(row => {
-        const name = row.getAttribute('data-name') || '';
-        const category = row.getAttribute('data-category') || '';
-        const status = row.getAttribute('data-status') || '';
-        
-        // Check search match (name or category)
-        const matchesSearch = searchInput === '' || 
-            name.includes(searchInput) || 
-            category.includes(searchInput);
-        
-        // Check category filter
-        const matchesCategory = categoryFilter === '' || category === categoryFilter;
-        
-        // Check stock status filter
-        const matchesStock = stockFilter === '' || status === stockFilter;
-        
-        // Show/hide row
-        if (matchesSearch && matchesCategory && matchesStock) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
-    });
-    
-    updateResultCount(visibleCount, rows.length);
-}
-
-function updateResultCount(visible, total) {
-    const resultCount = document.getElementById('resultCount');
-    const totalProducts = document.getElementById('totalProducts');
-    
-    if (visible !== undefined && total !== undefined) {
-        if (visible === total) {
-            resultCount.textContent = '';
-            totalProducts.textContent = total + ' products';
-        } else {
-            resultCount.textContent = 'Showing ' + visible + ' of ' + total + ' products';
-            totalProducts.textContent = visible + ' shown';
-        }
-    } else {
-        const rows = document.querySelectorAll('.product-row');
-        totalProducts.textContent = rows.length + ' products';
-    }
-}
-
-function clearSearch() {
-    document.getElementById('productSearch').value = '';
-    document.getElementById('categoryFilter').value = '';
-    document.getElementById('stockFilter').value = '';
-    filterProducts();
-}
-
-// Add keyboard shortcut (Ctrl+F or Cmd+F focuses search)
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-        e.preventDefault();
-        document.getElementById('productSearch').focus();
-    }
-    // Escape clears search
-    if (e.key === 'Escape') {
-        clearSearch();
-    }
 });
 </script>
 {% endblock %}

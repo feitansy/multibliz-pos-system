@@ -50,13 +50,28 @@ class SaleListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         # Exclude sales that have been fully returned (approved or completed returns)
-        from django.db.models import Exists, OuterRef
+        from django.db.models import Exists, OuterRef, Q
         approved_returns = Return.objects.filter(
             sale=OuterRef('pk'),
             status__in=['approved', 'completed']
         )
         queryset = queryset.exclude(Exists(approved_returns))
+        
+        # Add search functionality
+        search_query = self.request.GET.get('search', '').strip()
+        if search_query:
+            queryset = queryset.filter(
+                Q(product__name__icontains=search_query) |
+                Q(customer_name__icontains=search_query) |
+                Q(id__icontains=search_query)
+            )
+        
         return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
 
 class SaleDetailView(LoginRequiredMixin, DetailView):
     model = Sale
@@ -232,15 +247,17 @@ def process_transaction(request):
         payment_method = data.get('payment_method', 'cash')
         amount_paid = data.get('amount_paid', 0)
         change_amount = data.get('change_amount', 0)
-        
-        # Convert to Decimal for database storage
+        discount = data.get('discount', 0)
+                # Convert to Decimal for database storage
         from decimal import Decimal
         try:
             amount_paid = Decimal(str(amount_paid)) if amount_paid else Decimal('0')
             change_amount = Decimal(str(change_amount)) if change_amount else Decimal('0')
+            discount = Decimal(str(discount)) if discount else Decimal('0')
         except:
             amount_paid = Decimal('0')
             change_amount = Decimal('0')
+            discount = Decimal('0')
         
         # Validate payment method
         valid_methods = ['cash', 'card', 'check']
@@ -274,7 +291,8 @@ def process_transaction(request):
                     customer_name=customer_name,
                     payment_method=payment_method,
                     amount_paid=amount_paid,
-                    change_amount=change_amount
+                    change_amount=change_amount,
+                    discount=discount
                 )
                 
                 # Update stock inventory

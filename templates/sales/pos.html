@@ -1122,6 +1122,7 @@ function completeTransaction(event) {
     const amountPaidEl = document.getElementById('amountPaid');
     const amountPaid = amountPaidEl ? parseFloat(amountPaidEl.value) || 0 : 0;
     const changeAmount = amountPaid - total;
+    const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
     
     const transactionData = {
         items: cart.map(item => ({
@@ -1132,7 +1133,8 @@ function completeTransaction(event) {
         customer_name: customerName,
         payment_method: currentPaymentMethod,
         amount_paid: amountPaid,
-        change_amount: changeAmount > 0 ? changeAmount : 0
+        change_amount: changeAmount > 0 ? changeAmount : 0,
+        discount: discountAmount
     };
 
     console.log('=== Transaction Debug ===');

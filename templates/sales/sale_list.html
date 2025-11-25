@@ -30,10 +30,12 @@
                     </div>
                     <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-3 ms-lg-auto w-100 w-lg-auto justify-content-end">
                         <span class="badge bg-secondary text-uppercase letter-spacing-sm" id="sales-count-badge" data-total="{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ sales|length }}{% endif %}">{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ sales|length }}{% endif %} transactions</span>
-                        <div class="sales-search-wrapper flex-grow-1 flex-sm-grow-0">
-                            <i class="fas fa-search"></i>
-                            <input type="text" class="form-control sales-search-input" id="sales-search-input" placeholder="   Search transactions">
-                        </div>
+                        <form method="GET" class="d-flex">
+                            <div class="sales-search-wrapper flex-grow-1 flex-sm-grow-0">
+                                <i class="fas fa-search"></i>
+                                <input type="text" name="search" class="form-control sales-search-input" placeholder="   Search transactions" value="{{ search_query }}">
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -217,58 +219,13 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('sales-search-input');
-    if (!searchInput) {
-        return;
-    }
-
-    const tableRows = Array.from(document.querySelectorAll('#saleTable tbody tr')).filter(row => row.id !== 'sales-search-empty');
-    const emptyState = document.getElementById('sales-search-empty');
-    const searchTerm = document.getElementById('sales-search-term');
-    const countBadge = document.getElementById('sales-count-badge');
-    // Use server-provided total (from paginator) or fall back to visible rows
-    const serverTotal = countBadge ? parseInt(countBadge.dataset.total, 10) : tableRows.length;
-    const totalRows = tableRows.length;
-
-    const updateBadge = (count, isFiltered = false) => {
-        if (!countBadge) return;
-        const label = count === 1 ? 'transaction' : 'transactions';
-        if (isFiltered && count !== serverTotal) {
-            countBadge.textContent = `${count} of ${serverTotal} ${label}`;
-        } else {
-            countBadge.textContent = `${serverTotal} ${label}`;
-        }
-    };
-
-    updateBadge(serverTotal, false);
-
-    searchInput.addEventListener('input', function () {
-        const query = this.value.trim().toLowerCase();
-        let visibleCount = 0;
-
-        tableRows.forEach(row => {
-            const matches = row.textContent.toLowerCase().includes(query);
-            row.style.display = matches ? '' : 'none';
-            if (matches) {
-                visibleCount += 1;
+    const searchInputs = document.querySelectorAll('input[name="search"]');
+    searchInputs.forEach(input => {
+        input.addEventListener('keyup', function (e) {
+            if (e.key === 'Enter') {
+                this.form.submit();
             }
         });
-
-        if (query && visibleCount === 0) {
-            emptyState.classList.remove('d-none');
-            if (searchTerm) {
-                searchTerm.textContent = `"${this.value}"`;
-            }
-        } else {
-            emptyState.classList.add('d-none');
-        }
-
-        if (!query) {
-            visibleCount = serverTotal;
-            updateBadge(serverTotal, false);
-        } else {
-            updateBadge(visibleCount, true);
-        }
     });
 });
 </script>

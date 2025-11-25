@@ -67,6 +67,12 @@
                         <span class="receipt-label">Subtotal:</span>
                         <span class="receipt-value">₱{{ sale.total_price|floatformat:2 }}</span>
                     </div>
+                    {% if sale.discount %}
+                    <div class="receipt-total-row">
+                        <span class="receipt-label">Discount:</span>
+                        <span class="receipt-value" style="color: #10b981;">-₱{{ sale.discount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
                     <div class="receipt-total-row">
                         <span class="receipt-label">Tax (0%):</span>
                         <span class="receipt-value">₱0.00</span>
@@ -74,7 +80,7 @@
                     <div class="receipt-divider-small"></div>
                     <div class="receipt-total-row total-amount">
                         <span class="receipt-label">TOTAL:</span>
-                        <span class="receipt-value">₱{{ sale.total_price|floatformat:2 }}</span>
+                        <span class="receipt-value">₱{% if sale.discount %}{{ sale.total_price|add:sale.discount|floatformat:2 }}{% else %}{{ sale.total_price|floatformat:2 }}{% endif %}</span>
                     </div>
                 </div>
 

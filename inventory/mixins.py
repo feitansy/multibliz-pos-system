@@ -9,6 +9,23 @@ class InventoryMixin:
 class InventoryListMixin(InventoryMixin, ListView):
     context_object_name = 'items'
     paginate_by = 25
+    
+    def get_queryset(self):
+        from django.db.models import Q
+        queryset = super().get_queryset()
+        search_query = self.request.GET.get('search', '').strip()
+        if search_query:
+            queryset = queryset.filter(
+                Q(product__name__icontains=search_query) |
+                Q(supplier__name__icontains=search_query) |
+                Q(id__icontains=search_query)
+            )
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
 
 class InventoryDetailMixin(InventoryMixin, DetailView):
     pass
