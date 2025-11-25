@@ -471,8 +471,8 @@ Multibliz POS Team'''
         if email_sent:
             messages.success(request, 'OTP code has been sent to your email.')
         else:
-            # Email failed - show OTP in message for testing (REMOVE IN PRODUCTION)
-            messages.warning(request, f'Email delivery issue. For testing, your OTP code is: {otp.code}')
+            # Email failed - show a generic message (do not expose OTP)
+            messages.warning(request, 'There was a problem sending the OTP email. Please try again or contact support.')
         return redirect('verify_otp')
     
     return render(request, 'accounts/forgot_password_request.html')
