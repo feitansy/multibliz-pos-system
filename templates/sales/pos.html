@@ -133,6 +133,29 @@
                     <span class="pos-total-amount fw-bold" id="totalAmount">₱0.00</span>
                 </div>
 
+                <!-- Amount Paid -->
+                <div class="pos-summary-row">
+                    <span>Amount Paid:</span>
+                    <div class="input-group input-group-sm pos-amount-paid-group">
+                        <span class="input-group-text">₱</span>
+                        <input 
+                            type="number" 
+                            id="amountPaid" 
+                            class="form-control" 
+                            placeholder="0.00" 
+                            min="0" 
+                            step="0.01"
+                            oninput="calculateChange()"
+                        >
+                    </div>
+                </div>
+
+                <!-- Change -->
+                <div class="pos-summary-row pos-change">
+                    <span class="fw-bold">Change:</span>
+                    <span class="pos-change-amount fw-bold" id="changeAmount">₱0.00</span>
+                </div>
+
                 <!-- Customer Name -->
                 <div class="pos-customer-section">
                     <input 
@@ -658,6 +681,33 @@
         font-size: 0.85rem;
     }
 
+    .pos-amount-paid-group {
+        max-width: 140px;
+    }
+
+    .pos-amount-paid-group input {
+        min-height: 32px;
+        font-size: 0.85rem;
+    }
+
+    .pos-amount-paid-group .input-group-text {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+        background-color: #f3f4f6;
+    }
+
+    .pos-change {
+        background-color: #f0fdf4;
+        padding: 0.5rem;
+        border-radius: 4px;
+        margin-top: 0.25rem;
+    }
+
+    .pos-change-amount {
+        color: #10b981;
+        font-size: 1.1rem;
+    }
+
     .pos-customer-section {
         margin-bottom: 0.35rem;
     }
@@ -998,6 +1048,30 @@ function updateTotal() {
     
     const totalBadgeEl = document.getElementById('totalBadge');
     if (totalBadgeEl) totalBadgeEl.textContent = '₱' + total.toFixed(2);
+    
+    // Recalculate change when total changes
+    calculateChange();
+}
+
+function calculateChange() {
+    const totalAmountEl = document.getElementById('totalAmount');
+    const amountPaidEl = document.getElementById('amountPaid');
+    const changeAmountEl = document.getElementById('changeAmount');
+    
+    if (!totalAmountEl || !amountPaidEl || !changeAmountEl) return;
+    
+    const total = parseFloat(totalAmountEl.textContent.replace('₱', '')) || 0;
+    const amountPaid = parseFloat(amountPaidEl.value) || 0;
+    const change = amountPaid - total;
+    
+    // Update change display
+    if (change >= 0) {
+        changeAmountEl.textContent = '₱' + change.toFixed(2);
+        changeAmountEl.style.color = '#10b981'; // Green for valid change
+    } else {
+        changeAmountEl.textContent = '₱' + change.toFixed(2);
+        changeAmountEl.style.color = '#ef4444'; // Red for insufficient payment
+    }
 }
 
 function updateItemCount() {
@@ -1045,6 +1119,10 @@ function completeTransaction(event) {
     btn.disabled = true;
 
     // Prepare transaction data
+    const amountPaidEl = document.getElementById('amountPaid');
+    const amountPaid = amountPaidEl ? parseFloat(amountPaidEl.value) || 0 : 0;
+    const changeAmount = amountPaid - total;
+    
     const transactionData = {
         items: cart.map(item => ({
             product_id: item.product_id,
@@ -1052,7 +1130,9 @@ function completeTransaction(event) {
             price: item.price
         })),
         customer_name: customerName,
-        payment_method: currentPaymentMethod
+        payment_method: currentPaymentMethod,
+        amount_paid: amountPaid,
+        change_amount: changeAmount > 0 ? changeAmount : 0
     };
 
     console.log('=== Transaction Debug ===');
@@ -1103,6 +1183,13 @@ function completeTransaction(event) {
                 if (customerNameEl) customerNameEl.value = '';
                 const discountEl = document.getElementById('discountAmount');
                 if (discountEl) discountEl.value = '';
+                const amountPaidEl = document.getElementById('amountPaid');
+                if (amountPaidEl) amountPaidEl.value = '';
+                const changeAmountEl = document.getElementById('changeAmount');
+                if (changeAmountEl) {
+                    changeAmountEl.textContent = '₱0.00';
+                    changeAmountEl.style.color = '#10b981';
+                }
             } catch (e) {
                 console.error('Error updating UI after transaction:', e);
             }

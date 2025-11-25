@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -42,11 +42,39 @@ class StockDetailView(LoginRequiredMixin, InventoryDetailMixin):
     model = Stock
     template_name = 'inventory/stock_detail.html'
 
-class StockCreateView(LoginRequiredMixin, InventoryCreateMixin):
+class StockCreateView(LoginRequiredMixin, CreateView):
+    """
+    Stock Create View - Add stock to products
+    If product already has stock, it updates the existing stock record.
+    If product has no stock, it creates a new stock record.
+    """
     model = Stock
     template_name = 'inventory/stock_form.html'
     form_class = StockForm
     success_url = reverse_lazy('stock_list')
+    
+    def form_valid(self, form):
+        product = form.cleaned_data.get('product')
+        quantity = form.cleaned_data.get('quantity')
+        supplier = form.cleaned_data.get('supplier')
+        reorder_level = form.cleaned_data.get('reorder_level')
+        
+        # Check if stock already exists for this product
+        try:
+            existing_stock = Stock.objects.get(product=product)
+            # Update existing stock - ADD the new quantity to existing
+            existing_stock.quantity += quantity
+            if supplier:
+                existing_stock.supplier = supplier
+            if reorder_level:
+                existing_stock.reorder_level = reorder_level
+            existing_stock.save()
+            messages.success(self.request, f"Added {quantity} units to {product.name}. New total: {existing_stock.quantity} units.")
+            return redirect(self.success_url)
+        except Stock.DoesNotExist:
+            # Create new stock record
+            messages.success(self.request, f"Stock record created for {product.name} with {quantity} units.")
+            return super().form_valid(form)
 
 class StockUpdateView(LoginRequiredMixin, InventoryUpdateMixin):
     model = Stock

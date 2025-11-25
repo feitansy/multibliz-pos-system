@@ -82,15 +82,15 @@
                 <div class="receipt-payment mb-4">
                     <div class="receipt-row">
                         <span class="receipt-label">Payment Method:</span>
-                        <span class="receipt-value badge bg-success">Cash</span>
+                        <span class="receipt-value badge bg-success">{{ sale.get_payment_method_display }}</span>
                     </div>
                     <div class="receipt-row">
                         <span class="receipt-label">Amount Paid:</span>
-                        <span class="receipt-value">₱{{ sale.total_price|floatformat:2 }}</span>
+                        <span class="receipt-value">₱{% if sale.amount_paid %}{{ sale.amount_paid|floatformat:2 }}{% else %}{{ sale.total_price|floatformat:2 }}{% endif %}</span>
                     </div>
                     <div class="receipt-row">
                         <span class="receipt-label">Change:</span>
-                        <span class="receipt-value">₱0.00</span>
+                        <span class="receipt-value">₱{% if sale.change_amount %}{{ sale.change_amount|floatformat:2 }}{% else %}0.00{% endif %}</span>
                     </div>
                 </div>
 

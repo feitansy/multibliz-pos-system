@@ -184,9 +184,10 @@
         
         {% if not object %}
         <div class="form-group">
-            <label for="{{ form.sale.id_for_label }}">
-                Sale Transaction <span class="required-indicator">*</span>
+            <label for="saleSearchInput">
+                Search Sale by ID <span class="required-indicator">*</span>
             </label>
+            <input type="text" id="saleSearchInput" class="form-control mb-2" placeholder="Enter Sale ID (e.g., 123)..." autocomplete="off">
             {{ form.sale }}
             {% if form.sale.errors %}
                 <ul class="errorlist">
@@ -195,7 +196,7 @@
                     {% endfor %}
                 </ul>
             {% endif %}
-            <small class="helptext">Select the original sale transaction for this return</small>
+            <small class="helptext">Search by sale ID or select from dropdown</small>
         </div>
         
         <div id="saleInfoDisplay" style="display: none;"></div>
@@ -352,6 +353,9 @@
 </div>
 
 <script>
+    // Store sale data for calculations
+    let currentSaleData = null;
+    
     // Style form controls
     document.addEventListener('DOMContentLoaded', function() {
         const formControls = document.querySelectorAll('input[type="text"], input[type="number"], textarea, select');
@@ -369,41 +373,140 @@
             textarea.rows = 4;
         });
         
-        // Auto-calculate refund amount based on sale selection
         {% if not object %}
-        const saleSelect = document.getElementById('{{ form.sale.id_for_label }}');
-        const quantityInput = document.getElementById('{{ form.quantity_returned.id_for_label }}');
-        const refundInput = document.getElementById('{{ form.refund_amount.id_for_label }}');
+        const saleSelect = document.getElementById('id_sale');
+        const searchInput = document.getElementById('saleSearchInput');
+        const quantityInput = document.getElementById('id_quantity_returned');
+        const refundInput = document.getElementById('id_refund_amount');
+        const saleInfoDiv = document.getElementById('saleInfoDisplay');
         
-        if (saleSelect && quantityInput && refundInput) {
-            function updateRefundAmount() {
-                const selectedOption = saleSelect.options[saleSelect.selectedIndex];
-                if (selectedOption && selectedOption.value) {
-                    // Extract sale details from option text
-                    const quantity = parseInt(quantityInput.value) || 0;
+        // Store original options for filtering
+        const allOptions = saleSelect ? Array.from(saleSelect.options) : [];
+        
+        // Search by Sale ID
+        if (searchInput && saleSelect) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim();
+                
+                // Clear and filter options
+                saleSelect.innerHTML = '';
+                
+                allOptions.forEach(option => {
+                    // Match by sale ID (extract ID from option text like "Sale #123 - Product...")
+                    const optionText = option.text.toLowerCase();
+                    const searchLower = searchTerm.toLowerCase();
                     
-                    // Get sale details via AJAX would be better, but for now we can estimate
-                    // You can enhance this with an API call to get exact price
-                    
-                    // Display sale info
-                    const saleInfoDiv = document.getElementById('saleInfoDisplay');
-                    if (selectedOption.value) {
-                        saleInfoDiv.style.display = 'block';
-                        saleInfoDiv.innerHTML = `
-                            <div class="sale-info">
-                                <h5><i class="fas fa-info-circle"></i> Selected Sale</h5>
-                                <div class="info-row">
-                                    <span class="label">Sale:</span>
-                                    <span class="value">${selectedOption.text}</span>
-                                </div>
-                            </div>
-                        `;
+                    if (option.value === '' || 
+                        optionText.includes(searchLower) ||
+                        (searchTerm && option.text.includes('#' + searchTerm))) {
+                        saleSelect.appendChild(option.cloneNode(true));
                     }
+                });
+                
+                // If exact sale ID match found, select it
+                const exactMatch = Array.from(saleSelect.options).find(o => 
+                    o.text.includes('#' + searchTerm + ' ') && searchTerm.length > 0
+                );
+                if (exactMatch) {
+                    saleSelect.value = exactMatch.value;
+                    fetchSaleDetails(exactMatch.value);
                 }
+            });
+        }
+        
+        // Fetch sale details when selection changes
+        if (saleSelect) {
+            saleSelect.addEventListener('change', function() {
+                if (this.value) {
+                    fetchSaleDetails(this.value);
+                } else {
+                    saleInfoDiv.style.display = 'none';
+                    currentSaleData = null;
+                }
+            });
+        }
+        
+        // Auto-calculate refund when quantity changes
+        if (quantityInput) {
+            quantityInput.addEventListener('input', function() {
+                calculateRefund();
+            });
+        }
+        
+        function fetchSaleDetails(saleId) {
+            fetch(`/sales/api/sale-details/${saleId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentSaleData = data.sale;
+                        displaySaleInfo(data.sale);
+                        
+                        // Set max quantity to original sale quantity
+                        if (quantityInput) {
+                            quantityInput.max = data.sale.quantity;
+                            quantityInput.placeholder = `Max: ${data.sale.quantity} units`;
+                        }
+                        
+                        // Calculate refund
+                        calculateRefund();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching sale details:', error);
+                });
+        }
+        
+        function displaySaleInfo(sale) {
+            saleInfoDiv.style.display = 'block';
+            saleInfoDiv.innerHTML = `
+                <div class="sale-info">
+                    <h5><i class="fas fa-receipt"></i> Sale Information</h5>
+                    <div class="info-row">
+                        <span class="label">Sale ID:</span>
+                        <span class="value">#${sale.id}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Product:</span>
+                        <span class="value">${sale.product_name}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Original Quantity:</span>
+                        <span class="value">${sale.quantity} units</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Unit Price:</span>
+                        <span class="value">₱${sale.unit_price.toFixed(2)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Total Amount:</span>
+                        <span class="value">₱${sale.total_price.toFixed(2)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Customer:</span>
+                        <span class="value">${sale.customer_name}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Sale Date:</span>
+                        <span class="value">${sale.sale_date}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function calculateRefund() {
+            if (currentSaleData && quantityInput && refundInput) {
+                const quantity = parseInt(quantityInput.value) || 0;
+                const unitPrice = currentSaleData.unit_price;
+                const maxQuantity = currentSaleData.quantity;
+                
+                // Ensure quantity doesn't exceed original sale quantity
+                if (quantity > maxQuantity) {
+                    quantityInput.value = maxQuantity;
+                }
+                
+                const refundAmount = Math.min(quantity, maxQuantity) * unitPrice;
+                refundInput.value = refundAmount.toFixed(2);
             }
-            
-            saleSelect.addEventListener('change', updateRefundAmount);
-            quantityInput.addEventListener('input', updateRefundAmount);
         }
         {% endif %}
     });

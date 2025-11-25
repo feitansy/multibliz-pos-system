@@ -174,6 +174,35 @@ def search_products(request):
     return JsonResponse({'results': results})
 
 
+@require_http_methods(["GET"])
+def get_sale_details(request, sale_id):
+    """
+    AJAX endpoint to get sale details for return form
+    Returns sale info including product price for refund calculation
+    """
+    try:
+        sale = Sale.objects.select_related('product').get(id=sale_id)
+        unit_price = float(sale.total_price) / sale.quantity if sale.quantity > 0 else 0
+        
+        return JsonResponse({
+            'success': True,
+            'sale': {
+                'id': sale.id,
+                'product_name': sale.product.name,
+                'quantity': sale.quantity,
+                'unit_price': round(unit_price, 2),
+                'total_price': float(sale.total_price),
+                'customer_name': sale.customer_name or 'N/A',
+                'sale_date': sale.sale_date.strftime('%b %d, %Y'),
+            }
+        })
+    except Sale.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Sale not found'
+        }, status=404)
+
+
 @require_http_methods(["POST"])
 @csrf_exempt
 def process_transaction(request):
@@ -201,6 +230,17 @@ def process_transaction(request):
         cart_items = data.get('items', [])
         customer_name = data.get('customer_name', '').strip() if data.get('customer_name') else ''
         payment_method = data.get('payment_method', 'cash')
+        amount_paid = data.get('amount_paid', 0)
+        change_amount = data.get('change_amount', 0)
+        
+        # Convert to Decimal for database storage
+        from decimal import Decimal
+        try:
+            amount_paid = Decimal(str(amount_paid)) if amount_paid else Decimal('0')
+            change_amount = Decimal(str(change_amount)) if change_amount else Decimal('0')
+        except:
+            amount_paid = Decimal('0')
+            change_amount = Decimal('0')
         
         # Validate payment method
         valid_methods = ['cash', 'card', 'check']
@@ -232,7 +272,9 @@ def process_transaction(request):
                     quantity=quantity,
                     total_price=item_total,
                     customer_name=customer_name,
-                    payment_method=payment_method
+                    payment_method=payment_method,
+                    amount_paid=amount_paid,
+                    change_amount=change_amount
                 )
                 
                 # Update stock inventory

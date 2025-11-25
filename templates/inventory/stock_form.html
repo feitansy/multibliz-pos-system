@@ -21,15 +21,16 @@
                         <!-- Product Selection -->
                         <div class="form-group">
                             <label for="{{ form.product.id_for_label }}" class="form-label">
-                                <i class="fas fa-box text-primary"></i>Product
+                                <i class="fas fa-box text-primary"></i>Product <span class="text-danger">*</span>
                             </label>
+                            <input type="text" id="productSearchInput" class="form-control mb-2" placeholder="Search product by name..." autocomplete="off">
                             {{ form.product }}
                             {% if form.product.errors %}
                                 <div class="invalid-feedback d-block">
                                     <i class="fas fa-exclamation-circle"></i>{{ form.product.errors.0 }}
                                 </div>
                             {% else %}
-                                <small class="form-text">Select the product to manage</small>
+                                <small class="form-text">Search and select a product to add stock</small>
                             {% endif %}
                         </div>
 
@@ -113,8 +114,37 @@
 </div>
 
 <script>
-// Real-time form validation feedback
+// Product search filter
 document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('productSearchInput');
+    const productSelect = document.getElementById('id_product');
+    
+    if (searchInput && productSelect) {
+        // Store original options
+        const allOptions = Array.from(productSelect.options);
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            // Clear current options
+            productSelect.innerHTML = '';
+            
+            // Add matching options
+            allOptions.forEach(option => {
+                if (option.text.toLowerCase().includes(searchTerm) || option.value === '') {
+                    productSelect.appendChild(option.cloneNode(true));
+                }
+            });
+            
+            // If only one non-empty option matches, select it
+            const nonEmptyOptions = Array.from(productSelect.options).filter(o => o.value !== '');
+            if (nonEmptyOptions.length === 1 && searchTerm.length > 0) {
+                productSelect.value = nonEmptyOptions[0].value;
+            }
+        });
+    }
+    
+    // Real-time form validation feedback
     const form = document.querySelector('.stock-form');
     if (!form) return;
 

@@ -31,10 +31,10 @@ class StockForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Only show products that don't have stock records yet (for create)
+        # Allow selecting any product with existing stock (for update) or products without stock (for create)
         if not self.instance.pk:
-            existing_stock_products = Stock.objects.values_list('product_id', flat=True)
-            self.fields['product'].queryset = Product.objects.exclude(id__in=existing_stock_products)
+            # For create: show all products - we'll update existing stock or create new
+            self.fields['product'].queryset = Product.objects.all().order_by('name')
         
         # Add empty option for supplier
         self.fields['supplier'].required = False

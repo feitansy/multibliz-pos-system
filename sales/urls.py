@@ -7,6 +7,7 @@ urlpatterns = [
     path('pos/test/', views.POSTestView.as_view(), name='pos_test'),
     path('api/search-products/', views.search_products, name='search_products'),
     path('api/process-transaction/', views.process_transaction, name='process_transaction'),
+    path('api/sale-details/<int:sale_id>/', views.get_sale_details, name='get_sale_details'),
     
     # Product Management
     path('product/', views.ProductListView.as_view(), name='product_list'),
