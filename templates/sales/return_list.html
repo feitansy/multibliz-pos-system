@@ -276,6 +276,7 @@
                 <th>Customer</th>
                 <th>Quantity</th>
                 <th>Refund Amount</th>
+                <th>Refund Method</th>
                 <th>Reason</th>
                 <th>Status</th>
                 <th>Return Date</th>
@@ -291,13 +292,30 @@
                 <td>{{ return.sale.customer_name|default:"N/A" }}</td>
                 <td>{{ return.quantity_returned }}</td>
                 <td><strong>₱{{ return.refund_amount|floatformat:2 }}</strong></td>
+                <td>
+                    {% if return.refund_payment_method == 'cash' %}
+                        <span class="return-badge" style="background: linear-gradient(135deg, #55efc4 0%, #00b894 100%); color: white;">
+                            <i class="fas fa-money-bill-wave"></i> Cash
+                        </span>
+                    {% elif return.refund_payment_method == 'card' %}
+                        <span class="return-badge" style="background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); color: white;">
+                            <i class="fas fa-credit-card"></i> Card
+                        </span>
+                    {% elif return.refund_payment_method == 'check' %}
+                        <span class="return-badge" style="background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%); color: white;">
+                            <i class="fas fa-file-invoice"></i> Check
+                        </span>
+                    {% else %}
+                        <span class="return-badge" style="background: #dfe6e9; color: #636e72;">
+                            <i class="fas fa-money-bill-wave"></i> Cash
+                        </span>
+                    {% endif %}
+                </td>
                 <td>{{ return.get_reason_display }}</td>
                 <td>
                     <span class="return-badge status-{{ return.status }}">
                         {% if return.status == 'pending' %}
                             <i class="fas fa-clock"></i>
-                        {% elif return.status == 'approved' %}
-                            <i class="fas fa-check"></i>
                         {% elif return.status == 'rejected' %}
                             <i class="fas fa-times"></i>
                         {% elif return.status == 'completed' %}

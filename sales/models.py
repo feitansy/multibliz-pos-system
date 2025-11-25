@@ -59,7 +59,6 @@ class Sale(models.Model):
 class Return(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('approved', 'Approved'),
         ('rejected', 'Rejected'),
         ('completed', 'Completed'),
     ]
@@ -72,12 +71,19 @@ class Return(models.Model):
         ('other', 'Other'),
     ]
     
+    REFUND_METHOD_CHOICES = [
+        ('cash', 'Cash'),
+        ('card', 'Card'),
+        ('check', 'Check'),
+    ]
+    
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='returns')
     return_date = models.DateTimeField(auto_now_add=True)
     quantity_returned = models.PositiveIntegerField()
     reason = models.CharField(max_length=50, choices=REASON_CHOICES)
     reason_details = models.TextField(blank=True, help_text="Additional details about the return")
     refund_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    refund_payment_method = models.CharField(max_length=20, choices=REFUND_METHOD_CHOICES, default='cash')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     processed_by = models.CharField(max_length=255, blank=True)
     processed_date = models.DateTimeField(null=True, blank=True)

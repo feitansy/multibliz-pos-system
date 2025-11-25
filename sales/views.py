@@ -46,6 +46,17 @@ class SaleListView(LoginRequiredMixin, ListView):
     context_object_name = 'sales'
     ordering = ['-sale_date']  # Show newest sales first
     paginate_by = 50  # Show 50 sales per page
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Exclude sales that have been fully returned (approved or completed returns)
+        from django.db.models import Exists, OuterRef
+        approved_returns = Return.objects.filter(
+            sale=OuterRef('pk'),
+            status__in=['approved', 'completed']
+        )
+        queryset = queryset.exclude(Exists(approved_returns))
+        return queryset
 
 class SaleDetailView(LoginRequiredMixin, DetailView):
     model = Sale
@@ -362,7 +373,7 @@ class ReturnCreateView(LoginRequiredMixin, CreateView):
 class ReturnUpdateView(LoginRequiredMixin, UpdateView):
     model = Return
     template_name = 'sales/return_form.html'
-    fields = ['status', 'reason_details', 'refund_amount']
+    fields = ['status', 'refund_payment_method', 'reason_details', 'refund_amount']
     success_url = reverse_lazy('return_list')
     
     def dispatch(self, request, *args, **kwargs):
@@ -379,12 +390,10 @@ class ReturnUpdateView(LoginRequiredMixin, UpdateView):
             form.instance.processed_by = self.request.user.username
             
             new_status = form.cleaned_data.get('status')
-            if new_status == 'approved':
-                messages.success(self.request, f"Return #{self.object.id} has been APPROVED. Refund of ₱{self.object.refund_amount} will be reflected in sales.")
-            elif new_status == 'rejected':
+            if new_status == 'rejected':
                 messages.warning(self.request, f"Return #{self.object.id} has been REJECTED.")
             elif new_status == 'completed':
-                messages.success(self.request, f"Return #{self.object.id} has been marked as COMPLETED.")
+                messages.success(self.request, f"Return #{self.object.id} has been marked as COMPLETED. Refund of ₱{self.object.refund_amount} processed.")
             else:
                 messages.info(self.request, "Return updated successfully.")
         else:

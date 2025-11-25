@@ -58,6 +58,7 @@
                     <i class="fas fa-shield-alt" style="font-size: 15px; width: 18px; text-align: center;"></i> Security
                 </a>
             </li>
+            {% if user.is_superuser %}
             <li>
                 <a href="{% url 'user_management' %}" style="
                     display: flex;
@@ -74,6 +75,8 @@
                     <i class="fas fa-users" style="font-size: 15px; width: 18px; text-align: center;"></i> User Management
                 </a>
             </li>
+            {% endif %}
+            {% if user.is_superuser %}
             <li>
                 <a href="{% url 'audit:audit_trail' %}" style="
                     display: flex;
@@ -90,6 +93,7 @@
                     <i class="fas fa-history" style="font-size: 15px; width: 18px; text-align: center;"></i> Audit Trail
                 </a>
             </li>
+            {% endif %}
         </ul>
     </aside>
 
