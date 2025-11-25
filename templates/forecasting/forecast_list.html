@@ -70,7 +70,7 @@
                         <div class="text-center">
                             <i class="fas fa-sparkles fs-1 text-primary mb-3" style="opacity: 0.7;"></i>
                             <h6 class="text-muted mb-2 fw-bold text-uppercase">AI Prediction Summary</h6>
-                            <h2 class="fw-bold mb-2" style="color: #8b5cf6;">~<span id="totalForecast">129</span> Units</h2>
+                            <h2 class="fw-bold mb-2" style="color: #8b5cf6;">~<span id="totalForecast">{{ total_predicted_units|default:0 }}</span> Units</h2>
                             <div class="mb-4 p-3 rounded-2" style="background: rgba(34, 197, 94, 0.1);">
                                 <small class="text-muted d-block mb-1">Total Projected Revenue</small>
                                 <h4 class="fw-bold mb-0 text-success">₱{{ total_projected_revenue|floatformat:2 }}</h4>

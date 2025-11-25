@@ -76,12 +76,25 @@ class ForecastListView(LoginRequiredMixin, ListView):
             
             context['forecast_data_json'] = json.dumps(formatted_forecasts)
             
-            # Calculate total projected revenue from all forecasts
+            # Calculate total projected revenue from future forecasts only (next 30 days)
+            future_forecasts = Forecast.objects.filter(
+                forecast_date__gte=today,
+                forecast_date__lte=thirty_days_ahead
+            ).select_related('product')
+            
             total_revenue = sum(
                 forecast.predicted_revenue 
-                for forecast in self.get_queryset()
+                for forecast in future_forecasts
             )
+            
+            # Calculate total predicted units
+            total_units = sum(
+                forecast.predicted_quantity 
+                for forecast in future_forecasts
+            )
+            
             context['total_projected_revenue'] = total_revenue
+            context['total_predicted_units'] = total_units
             
         except Exception as e:
             # If there's an error, provide empty data to prevent template errors
