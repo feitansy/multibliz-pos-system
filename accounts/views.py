@@ -371,14 +371,20 @@ def forgot_password_request(request):
         # Generate OTP
         otp = PasswordResetOTP.create_for_user(user)
         
-        # Send OTP via Email (synchronous - more reliable on Render)
+        # Send OTP via Email with timeout protection
         email_sent = False
         try:
-            from django.core.mail import EmailMessage
+            from django.core.mail import get_connection, EmailMessage
             from django.conf import settings
+            import socket
             
-            subject = 'Password Reset OTP - Multibliz POS'
-            message = f'''Hello {user.username},
+            # Set a socket timeout to prevent hanging (10 seconds max)
+            original_timeout = socket.getdefaulttimeout()
+            socket.setdefaulttimeout(10)
+            
+            try:
+                subject = 'Password Reset OTP - Multibliz POS'
+                message = f'''Hello {user.username},
 
 You requested to reset your password. Your OTP code is:
 
@@ -390,15 +396,32 @@ If you did not request this, please ignore this email.
 
 Best regards,
 Multibliz POS Team'''
-            
-            email = EmailMessage(
-                subject=subject,
-                body=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[user.email],
-            )
-            email.send(fail_silently=False)
-            email_sent = True
+                
+                # Create connection with timeout
+                connection = get_connection(
+                    backend=settings.EMAIL_BACKEND,
+                    host=settings.EMAIL_HOST,
+                    port=settings.EMAIL_PORT,
+                    username=settings.EMAIL_HOST_USER,
+                    password=settings.EMAIL_HOST_PASSWORD,
+                    use_tls=settings.EMAIL_USE_TLS,
+                    fail_silently=True,
+                    timeout=10,  # 10 second timeout
+                )
+                
+                email = EmailMessage(
+                    subject=subject,
+                    body=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user.email],
+                    connection=connection,
+                )
+                result = email.send(fail_silently=True)
+                email_sent = result > 0
+                
+            finally:
+                # Restore original timeout
+                socket.setdefaulttimeout(original_timeout)
             
         except Exception as e:
             import logging
