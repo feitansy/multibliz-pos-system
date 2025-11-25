@@ -48,7 +48,9 @@
                     <!-- Single Item -->
                     <div class="receipt-item">
                         <div class="item-row">
-                            <span class="item-description">{{ sale.product.name }}</span>
+                            <span class="item-description">
+                                {% if sale.receipt_label %}{{ sale.receipt_label }}{% elif sale.product.label %}{{ sale.product.label }}{% else %}{{ sale.product.name }}{% endif %}
+                            </span>
                             <span class="item-qty text-end">{{ sale.quantity }}</span>
                             <span class="item-price text-end">₱{{ sale.product.price|floatformat:2 }}</span>
                         </div>

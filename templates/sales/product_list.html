@@ -67,6 +67,7 @@
                         <thead>
                             <tr>
                                 <th data-column="name" data-sortable="true">Name</th>
+                                <th data-column="label" data-sortable="true">Label</th>
                                 <th data-column="price" data-sortable="true">Price</th>
                                 <th data-column="category" data-sortable="true">Category</th>
                                 <th data-column="status" data-sortable="true">Stock Status</th>
@@ -89,6 +90,13 @@
                                                 <span class="status-indicator-dot {% if stock.quantity <= stock.reorder_level %}status-critical{% elif stock.quantity <= stock.reorder_level|add:15 %}status-warning{% else %}status-healthy{% endif %}"></span>
                                             {% endif %}
                                             <strong>{{ product.name }}</strong>
+                                        </td>
+                                        <td data-column="label">
+                                            {% if product.label %}
+                                                <code style="background-color: #f0f0f0; padding: 2px 6px; border-radius: 3px;">{{ product.label }}</code>
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
                                         </td>
                                         <td data-column="price" class="fw-bold text-success">₱{{ product.price|floatformat:2 }}</td>
                                         <td data-column="category">

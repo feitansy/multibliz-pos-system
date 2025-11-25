@@ -18,12 +18,16 @@ class ProductForm(forms.ModelForm):
     
     class Meta:
         model = Product
-        fields = ['name', 'description', 'price', 'category']
+        fields = ['name', 'label', 'description', 'price', 'category']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter product name',
                 'required': True,
+            }),
+            'label': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Receipt label/SKU (optional)',
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
