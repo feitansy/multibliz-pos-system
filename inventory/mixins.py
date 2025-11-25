@@ -12,7 +12,10 @@ class InventoryListMixin(InventoryMixin, ListView):
     
     def get_queryset(self):
         from django.db.models import Q
+        from django.db import models
         queryset = super().get_queryset()
+        
+        # Search filter
         search_query = self.request.GET.get('search', '').strip()
         if search_query:
             queryset = queryset.filter(
@@ -20,11 +23,36 @@ class InventoryListMixin(InventoryMixin, ListView):
                 Q(supplier__name__icontains=search_query) |
                 Q(id__icontains=search_query)
             )
+        
+        # Category filter (filter by product category)
+        category_filter = self.request.GET.get('category', '').strip()
+        if category_filter:
+            queryset = queryset.filter(product__category=category_filter)
+        
+        # Stock status filter
+        stock_status = self.request.GET.get('stock_status', '').strip()
+        if stock_status:
+            if stock_status == 'no_stocks':
+                queryset = queryset.filter(quantity=0)
+            elif stock_status == 'critical':
+                queryset = queryset.filter(quantity__gt=0, quantity__lte=models.F('reorder_level'))
+            elif stock_status == 'warning':
+                queryset = queryset.filter(quantity__gt=models.F('reorder_level'), quantity__lte=models.F('reorder_level') + 15)
+            elif stock_status == 'healthy':
+                queryset = queryset.filter(quantity__gt=models.F('reorder_level') + 15)
+        
         return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('search', '')
+        context['selected_category'] = self.request.GET.get('category', '')
+        context['selected_stock_status'] = self.request.GET.get('stock_status', '')
+        
+        # Get all unique categories from products that have stock
+        all_categories = self.model.objects.values_list('product__category', flat=True).distinct().filter(product__category__isnull=False).exclude(product__category='')
+        context['all_categories'] = sorted(all_categories)
+        
         return context
 
 class InventoryDetailMixin(InventoryMixin, DetailView):

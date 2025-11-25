@@ -19,16 +19,38 @@
                     <h5 class="mb-0 fw-bold">Stock Levels</h5>
                     <span class="badge bg-secondary ms-auto">{{ object_list|length }} items</span>
                 </div>
-                <div class="position-relative" style="max-width: 400px;">
-                    <input 
-                        type="text" 
-                        id="productSearch" 
-                        class="form-control form-control-lg" 
-                        placeholder="Search products by name..."
-                        style="padding-left: 38px; border-radius: 8px; border: 1.5px solid #e5e7eb;"
-                    />
-                    <i class="fas fa-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px;"></i>
-                </div>
+                <form method="GET" id="filterForm" class="row g-3 align-items-center">
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="position-relative">
+                            <input 
+                                type="text" 
+                                name="search"
+                                class="form-control form-control-lg" 
+                                placeholder="Search products by name..."
+                                value="{{ search_query }}"
+                                style="padding-left: 38px; border-radius: 8px; border: 1.5px solid #e5e7eb;"
+                            />
+                            <i class="fas fa-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px;"></i>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <select name="category" class="form-select" onchange="document.getElementById('filterForm').submit();">
+                            <option value="">All Categories</option>
+                            {% for category_item in all_categories %}
+                                <option value="{{ category_item }}" {% if selected_category == category_item %}selected{% endif %}>{{ category_item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <select name="stock_status" class="form-select" onchange="document.getElementById('filterForm').submit();">
+                            <option value="">All Stock Status</option>
+                            <option value="no_stocks" {% if selected_stock_status == 'no_stocks' %}selected{% endif %}>No Stocks</option>
+                            <option value="critical" {% if selected_stock_status == 'critical' %}selected{% endif %}>Critical</option>
+                            <option value="warning" {% if selected_stock_status == 'warning' %}selected{% endif %}>Reorder Soon</option>
+                            <option value="healthy" {% if selected_stock_status == 'healthy' %}selected{% endif %}>Healthy</option>
+                        </select>
+                    </div>
+                </form>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -45,7 +67,9 @@
                         </thead>
                         <tbody>
                             {% for stock in object_list %}
-                                {% if stock.quantity <= stock.reorder_level %}
+                                {% if stock.quantity == 0 %}
+                                    <tr class="table-row-critical">
+                                {% elif stock.quantity <= stock.reorder_level %}
                                     <tr class="table-row-critical">
                                 {% elif stock.quantity <= stock.reorder_level|add:15 %}
                                     <tr class="table-row-warning">
@@ -53,7 +77,7 @@
                                     <tr class="table-row-healthy">
                                 {% endif %}
                                     <td data-column="product">
-                                        <span class="status-indicator-dot {% if stock.quantity <= stock.reorder_level %}status-critical{% elif stock.quantity <= stock.reorder_level|add:15 %}status-warning{% else %}status-healthy{% endif %}"></span>
+                                        <span class="status-indicator-dot {% if stock.quantity == 0 %}status-critical{% elif stock.quantity <= stock.reorder_level %}status-critical{% elif stock.quantity <= stock.reorder_level|add:15 %}status-warning{% else %}status-healthy{% endif %}"></span>
                                         <strong>{{ stock.product.name }}</strong>
                                     </td>
                                     <td data-column="supplier">{{ stock.supplier.name }}</td>
@@ -62,7 +86,11 @@
                                         <span class="badge bg-light text-dark">{{ stock.reorder_level }}</span>
                                     </td>
                                     <td data-column="status">
-                                        {% if stock.quantity <= stock.reorder_level %}
+                                        {% if stock.quantity == 0 %}
+                                            <span class="badge status-badge status-badge-critical">
+                                                <i class="fas fa-exclamation-circle me-1"></i>NO STOCKS
+                                            </span>
+                                        {% elif stock.quantity <= stock.reorder_level %}
                                             <span class="badge status-badge status-badge-critical">
                                                 <i class="fas fa-circle-exclamation me-1"></i>CRITICAL
                                             </span>
