@@ -48,6 +48,7 @@ class SaleListView(LoginRequiredMixin, ListView):
     paginate_by = 50  # Show 50 sales per page
     
     def get_queryset(self):
+        from datetime import datetime, timedelta
         queryset = super().get_queryset()
         # Exclude sales that have been fully returned (approved or completed returns)
         from django.db.models import Exists, OuterRef, Q
@@ -66,11 +67,70 @@ class SaleListView(LoginRequiredMixin, ListView):
                 Q(id__icontains=search_query)
             )
         
+        # Add date range filtering
+        date_range = self.request.GET.get('date_range', '').strip()
+        if date_range:
+            if date_range == 'today':
+                from django.utils import timezone
+                today = timezone.now().date()
+                queryset = queryset.filter(sale_date__date=today)
+            elif date_range == 'week':
+                from django.utils import timezone
+                today = timezone.now().date()
+                start_of_week = today - timedelta(days=today.weekday())
+                queryset = queryset.filter(sale_date__date__gte=start_of_week)
+            elif date_range == 'month':
+                from django.utils import timezone
+                today = timezone.now().date()
+                start_of_month = today.replace(day=1)
+                queryset = queryset.filter(sale_date__date__gte=start_of_month)
+            elif date_range == 'quarter':
+                from django.utils import timezone
+                today = timezone.now().date()
+                quarter = (today.month - 1) // 3
+                start_of_quarter = today.replace(month=quarter * 3 + 1, day=1)
+                queryset = queryset.filter(sale_date__date__gte=start_of_quarter)
+            elif date_range == 'year':
+                from django.utils import timezone
+                today = timezone.now().date()
+                start_of_year = today.replace(month=1, day=1)
+                queryset = queryset.filter(sale_date__date__gte=start_of_year)
+            elif date_range == 'custom':
+                # Handle custom date range
+                start_date = self.request.GET.get('start_date', '').strip()
+                end_date = self.request.GET.get('end_date', '').strip()
+                if start_date:
+                    try:
+                        start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+                        queryset = queryset.filter(sale_date__date__gte=start_date_obj)
+                    except ValueError:
+                        pass
+                if end_date:
+                    try:
+                        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+                        queryset = queryset.filter(sale_date__date__lte=end_date_obj)
+                    except ValueError:
+                        pass
+        
         return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('search', '')
+        context['date_range'] = self.request.GET.get('date_range', '')
+        context['start_date'] = self.request.GET.get('start_date', '')
+        context['end_date'] = self.request.GET.get('end_date', '')
+        
+        # Calculate totals for the filtered sales
+        from django.db.models import Sum
+        queryset = self.get_queryset()
+        totals = queryset.aggregate(
+            total_quantity=Sum('quantity'),
+            total_revenue=Sum('total_price')
+        )
+        context['total_quantity'] = totals['total_quantity'] or 0
+        context['total_revenue'] = totals['total_revenue'] or 0
+        
         return context
 
 class SaleDetailView(LoginRequiredMixin, DetailView):
@@ -371,6 +431,91 @@ class SaleReceiptView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['now'] = timezone.now()
+        return context
+
+
+class SalePrintReportView(LoginRequiredMixin, TemplateView):
+    """
+    Print Sales Report View
+    
+    Generates a print-friendly report of sales filtered by date range.
+    Allows printing:
+    - Current month sales
+    - Custom date range sales
+    - All sales history
+    """
+    template_name = 'sales/print_report.html'
+    
+    def get_context_data(self, **kwargs):
+        from datetime import datetime, timedelta
+        context = super().get_context_data(**kwargs)
+        
+        queryset = Sale.objects.all()
+        
+        # Exclude fully returned sales
+        from django.db.models import Exists, OuterRef
+        approved_returns = Return.objects.filter(
+            sale=OuterRef('pk'),
+            status__in=['approved', 'completed']
+        )
+        queryset = queryset.exclude(Exists(approved_returns))
+        
+        # Determine report type
+        report_type = self.request.GET.get('report_type', 'month')
+        
+        if report_type == 'month':
+            # Current month
+            today = timezone.now().date()
+            start_of_month = today.replace(day=1)
+            queryset = queryset.filter(sale_date__date__gte=start_of_month)
+            context['report_title'] = f"Sales Report - {start_of_month.strftime('%B %Y')}"
+        elif report_type == 'custom':
+            # Custom date range
+            start_date = self.request.GET.get('start_date', '').strip()
+            end_date = self.request.GET.get('end_date', '').strip()
+            
+            if start_date:
+                try:
+                    start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+                    queryset = queryset.filter(sale_date__date__gte=start_date_obj)
+                    context['start_date'] = start_date_obj.strftime('%B %d, %Y')
+                except ValueError:
+                    pass
+            
+            if end_date:
+                try:
+                    end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+                    queryset = queryset.filter(sale_date__date__lte=end_date_obj)
+                    context['end_date'] = end_date_obj.strftime('%B %d, %Y')
+                except ValueError:
+                    pass
+            
+            if start_date and end_date:
+                context['report_title'] = f"Sales Report - {context.get('start_date')} to {context.get('end_date')}"
+            else:
+                context['report_title'] = "Sales Report - Custom Period"
+        else:  # all
+            context['report_title'] = "Complete Sales History"
+        
+        # Order by date descending
+        queryset = queryset.order_by('-sale_date')
+        
+        # Calculate totals
+        from django.db.models import Sum, Count
+        totals = queryset.aggregate(
+            total_sales=Count('id'),
+            total_quantity=Sum('quantity'),
+            total_revenue=Sum('total_price'),
+            total_discount=Sum('discount')
+        )
+        
+        context['sales'] = queryset
+        context['total_sales'] = totals['total_sales'] or 0
+        context['total_quantity'] = totals['total_quantity'] or 0
+        context['total_revenue'] = totals['total_revenue'] or 0
+        context['total_discount'] = totals['total_discount'] or 0
+        context['report_type'] = report_type
+        
         return context
 
 

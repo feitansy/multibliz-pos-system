@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Print Sales Report - Multibliz POS{% endblock %}
+
+{% block extra_head %}
+<style>
+    @media print {
+        body {
+            font-size: 12pt;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .table {
+            page-break-inside: avoid;
+        }
+        tr {
+            page-break-inside: avoid;
+        }
+    }
+    
+    .report-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #333;
+        padding-bottom: 1rem;
+    }
+    
+    .report-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+    
+    .summary-item {
+        text-align: center;
+    }
+    
+    .summary-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+    
+    .summary-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .print-controls {
+        margin-bottom: 1rem;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <h2 class="fw-bold">{{ report_title }}</h2>
+        <div class="print-controls d-flex">
+            <button onclick="window.print()" class="btn btn-primary btn-sm">
+                <i class="fas fa-print me-1"></i>Print
+            </button>
+            <a href="{% url 'sale_list' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back
+            </a>
+        </div>
+    </div>
+    
+    <!-- Report Header -->
+    <div class="report-header">
+        <h1 class="fw-bold mb-1">MULTIBLIZ POS SYSTEM</h1>
+        <h4>{{ report_title }}</h4>
+        {% if start_date %}
+            <p class="text-muted mb-0">
+                Period: <strong>{{ start_date }}{% if end_date %} to {{ end_date }}{% endif %}</strong>
+            </p>
+        {% endif %}
+        <p class="text-muted small">Generated: <strong>{% now 'M d, Y H:i' %}</strong></p>
+    </div>
+    
+    <!-- Summary Statistics -->
+    <div class="report-summary">
+        <div class="summary-item">
+            <div class="summary-label">Total Transactions</div>
+            <div class="summary-value">{{ total_sales }}</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-label">Total Quantity Sold</div>
+            <div class="summary-value">{{ total_quantity }} units</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-label">Total Revenue</div>
+            <div class="summary-value">₱{{ total_revenue|floatformat:2 }}</div>
+        </div>
+        {% if total_discount %}
+        <div class="summary-item">
+            <div class="summary-label">Total Discount</div>
+            <div class="summary-value">₱{{ total_discount|floatformat:2 }}</div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sales Table -->
+    {% if sales %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total Price</th>
+                            <th>Discount</th>
+                            <th>Payment Method</th>
+                            <th>Customer</th>
+                            <th>Date & Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales %}
+                        <tr>
+                            <td>{{ sale.id }}</td>
+                            <td>{{ sale.product.name }}</td>
+                            <td class="text-center">{{ sale.quantity }}</td>
+                            <td class="text-right">₱{{ sale.total_price|add:0|div:sale.quantity|floatformat:2 }}</td>
+                            <td class="text-right">₱{{ sale.total_price|floatformat:2 }}</td>
+                            <td class="text-right">₱{{ sale.discount|floatformat:2 }}</td>
+                            <td>
+                                {% if sale.payment_method == 'cash' %}
+                                    Cash
+                                {% elif sale.payment_method == 'card' %}
+                                    Card
+                                {% elif sale.payment_method == 'check' %}
+                                    Check
+                                {% else %}
+                                    {{ sale.payment_method }}
+                                {% endif %}
+                            </td>
+                            <td>{{ sale.customer_name|default:"—" }}</td>
+                            <td>{{ sale.sale_date|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light fw-bold">
+                        <tr>
+                            <td colspan="2">TOTAL</td>
+                            <td class="text-center">{{ total_quantity }}</td>
+                            <td colspan="1"></td>
+                            <td class="text-right">₱{{ total_revenue|floatformat:2 }}</td>
+                            <td class="text-right">₱{{ total_discount|floatformat:2 }}</td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center py-4">
+        <i class="fas fa-info-circle me-2"></i>
+        No sales records found for the selected period.
+    </div>
+    {% endif %}
+    
+    <!-- Footer -->
+    <div class="text-center mt-5 text-muted small no-print">
+        <p>This is a computer-generated report. No signature required.</p>
+    </div>
+</div>
+
+<script>
+    // Auto-print if requested
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('auto_print') === 'true') {
+        window.addEventListener('load', function() {
+            window.print();
+        });
+    }
+</script>
+{% endblock %}
