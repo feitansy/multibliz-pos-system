@@ -7,6 +7,30 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ['category', 'created_at']
     search_fields = ['name', 'description']
     ordering = ['-created_at']
+    readonly_fields = ['image_preview']
+    
+    fieldsets = (
+        ('Product Information', {
+            'fields': ('name', 'label', 'description', 'price', 'category')
+        }),
+        ('Image', {
+            'fields': ('image', 'image_preview')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def image_preview(self, obj):
+        if obj.image:
+            from django.utils.html import format_html
+            return format_html(
+                '<img src="{}" style="max-width: 200px; max-height: 200px;" />',
+                obj.image.url
+            )
+        return "No image"
+    image_preview.short_description = "Image Preview"
 
 @admin.register(Sale)
 class SaleAdmin(admin.ModelAdmin):
