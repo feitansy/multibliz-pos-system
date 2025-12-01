@@ -329,11 +329,6 @@
                     <a href="{% url 'return_detail' return.id %}" class="action-btn btn-view" data-bs-toggle="tooltip" title="View Details">
                         <i class="fas fa-eye"></i> View
                     </a>
-                    {% if return.status == 'pending' %}
-                    <a href="{% url 'return_update' return.id %}" class="action-btn btn-edit" data-bs-toggle="tooltip" title="Update Return">
-                        <i class="fas fa-edit"></i> Update
-                    </a>
-                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
