@@ -10,7 +10,7 @@
 }
 
 .table thead th {
-  background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
+  background: #5a67d8;
   color: white;
   font-weight: 600;
   border: none;
