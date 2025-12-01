@@ -1,7 +1,7 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.db import models
+from django.db import models, transaction
 from inventory.models import Stock
 
 class ProductMixin:
@@ -77,22 +77,33 @@ class ProductDetailMixin(ProductMixin, DetailView):
 
 class ProductCreateMixin(ProductMixin, CreateView):
     def form_valid(self, form):
-        # Save the product first
-        response = super().form_valid(form)
-        
-        # Update the auto-created stock record with the supplier
-        supplier = form.cleaned_data.get('supplier')
-        if supplier:
-            try:
-                stock = Stock.objects.get(product=self.object)
-                stock.supplier = supplier
-                stock.save()
-            except Stock.DoesNotExist:
-                # Stock should be auto-created by signal, but just in case
-                Stock.objects.create(product=self.object, supplier=supplier)
-        
-        messages.success(self.request, f"{self.model._meta.verbose_name} created successfully.")
-        return response
+        try:
+            with transaction.atomic():
+                # Save the product first (also triggers signal to create Stock)
+                response = super().form_valid(form)
+                
+                # Update the auto-created stock record with the supplier
+                supplier = form.cleaned_data.get('supplier')
+                if supplier:
+                    try:
+                        stock = Stock.objects.select_for_update().get(product=self.object)
+                        stock.supplier = supplier
+                        stock.save()
+                    except Stock.DoesNotExist:
+                        # Stock should be auto-created by signal, but just in case
+                        Stock.objects.create(product=self.object, supplier=supplier)
+                
+                messages.success(self.request, f"{self.model._meta.verbose_name} created successfully.")
+                return response
+        except Exception as e:
+            # Log the error for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error creating product: {str(e)}", exc_info=True)
+            messages.error(self.request, f"Error creating product: {str(e)}")
+            # Return to form with errors
+            form.add_error(None, str(e))
+            return self.form_invalid(form)
 
 class ProductUpdateMixin(ProductMixin, UpdateView):
     def get_initial(self):

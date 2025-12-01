@@ -31,7 +31,14 @@ class Stock(models.Model):
 @receiver(post_save, sender='sales.Product')
 def create_stock_for_product(sender, instance, created, **kwargs):
     if created:
-        Stock.objects.get_or_create(
-            product=instance,
-            defaults={'quantity': 0, 'reorder_level': 10}
-        )
+        try:
+            Stock.objects.get_or_create(
+                product=instance,
+                defaults={'quantity': 0, 'reorder_level': 10}
+            )
+        except Exception as e:
+            # Log but don't fail the product save
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Could not auto-create stock for product {instance.id}: {str(e)}")
+

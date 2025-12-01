@@ -182,6 +182,15 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'multiblizinternationalcorp
 # SENDGRID_API_KEY = 'your-sendgrid-api-key'
 # DEFAULT_FROM_EMAIL = 'noreply@multiblizpos.com'
 
+# If a SendGrid API key is provided in the environment, prefer SendGrid (HTTP API)
+# This is useful on hosts where outbound SMTP (ports 25/587/465) is blocked.
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+if SENDGRID_API_KEY:
+    EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+    # sendgrid-django reads SENDGRID_API_KEY from settings
+    # keep DEFAULT_FROM_EMAIL as-is unless explicitly overridden
+    SENDGRID_API_KEY = SENDGRID_API_KEY
+
 # Option 3: Custom SMTP
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'your-smtp-server'
