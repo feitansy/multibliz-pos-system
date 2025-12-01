@@ -157,30 +157,6 @@ class SaleUpdateView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, "Sale updated successfully.")
         return super().form_valid(form)
 
-class SaleDeleteView(AdminRequiredMixin, CanDeleteMixin, LoginRequiredMixin, DeleteView):
-    """
-    SECURITY: Delete Sale View with Role-Based Access Control
-    
-    This view enforces strict permission checks before allowing deletion:
-    1. User must be authenticated (handled by LoginRequiredMixin)
-    2. User must have admin role (handled by AdminRequiredMixin)
-    3. Additional permission checks at dispatch and delete stages (CanDeleteMixin)
-    
-    Only users with admin role can delete sales records.
-    All other users receive a 403 Forbidden error.
-    """
-    model = Sale
-    template_name = 'sales/sale_confirm_delete.html'
-    success_url = reverse_lazy('sale_list')
-
-    def delete(self, request, *args, **kwargs):
-        """
-        Override delete to add security logging and messages.
-        Permission checks already enforced by mixins, but we add audit trail here.
-        """
-        messages.success(self.request, "Sale deleted successfully.")
-        return super().delete(request, *args, **kwargs)
-
 
 class POSView(LoginRequiredMixin, TemplateView):
     """

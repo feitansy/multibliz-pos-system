@@ -187,11 +187,6 @@
                                         <a href="{% url 'sale_receipt' sale.pk %}" class="btn btn-sm btn-outline-success me-1" title="Print Receipt">
                                             <i class="fas fa-receipt"></i>
                                         </a>
-                                        {% if user.is_admin %}
-                                            <a href="{% url 'sale_delete' sale.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
-                                        {% endif %}
                                     </td>
                                 </tr>
                             {% endfor %}

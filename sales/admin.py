@@ -15,6 +15,10 @@ class SaleAdmin(admin.ModelAdmin):
     search_fields = ['customer_name', 'product__name']
     ordering = ['-sale_date']
     readonly_fields = ['sale_date']
+    
+    def has_delete_permission(self, request, obj=None):
+        """Disable delete permission for all users - sales records cannot be deleted"""
+        return False
 
 @admin.register(Return)
 class ReturnAdmin(admin.ModelAdmin):

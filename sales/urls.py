@@ -21,7 +21,6 @@ urlpatterns = [
     path('sale/create/', views.SaleCreateView.as_view(), name='sale_create'),
     path('sale/<int:pk>/', views.SaleDetailView.as_view(), name='sale_detail'),
     path('sale/<int:pk>/update/', views.SaleUpdateView.as_view(), name='sale_update'),
-    path('sale/<int:pk>/delete/', views.SaleDeleteView.as_view(), name='sale_delete'),
     path('sale/<int:pk>/receipt/', views.SaleReceiptView.as_view(), name='sale_receipt'),
     path('sale/print-report/', views.SalePrintReportView.as_view(), name='sale_print_report'),
     
