@@ -71,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'forecasting.middleware.AutoForecastMiddleware',  # Auto-generate forecasts every 30 days
 ]
 
 ROOT_URLCONF = 'multibliz_pos.urls'

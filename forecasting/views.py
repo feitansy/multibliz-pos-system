@@ -5,7 +5,7 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models
 from django.db.models.functions import TruncDate
-from .models import Forecast
+from .models import Forecast, ForecastConfig
 import pandas as pd
 import xgboost as xgb
 from prophet import Prophet
@@ -96,11 +96,22 @@ class ForecastListView(LoginRequiredMixin, ListView):
             context['total_projected_revenue'] = total_revenue
             context['total_predicted_units'] = total_units
             
+            # Add forecast generation status
+            try:
+                config = ForecastConfig.get_config()
+                context['forecast_config'] = config
+                context['last_generated'] = config.last_generated
+                context['next_generation_days'] = config.days_until_next_generation()
+                context['auto_generate_enabled'] = config.auto_generate_enabled
+            except Exception:
+                context['forecast_config'] = None
+            
         except Exception as e:
             # If there's an error, provide empty data to prevent template errors
             context['historical_sales_json'] = '[]'
             context['forecast_data_json'] = '[]'
             context['total_projected_revenue'] = 0
+            context['forecast_config'] = None
             print(f"Error fetching historical sales: {e}")
         
         return context
@@ -225,12 +236,16 @@ class GenerateForecastView(LoginRequiredMixin, View):
                     except Exception as e:
                         errors.append(f'Product {prod_id}: {str(e)}')
 
+            # Update the forecast config to mark as generated
+            config = ForecastConfig.get_config()
+            config.mark_generated()
+
             return JsonResponse({
                 'message': f'Generated {forecasts_generated} forecasts for top 50 products. Cleaned up {deleted_count} old forecasts.',
                 'forecasts_generated': forecasts_generated,
                 'old_forecasts_deleted': deleted_count,
                 'total_products': len(products),
-                'total_products': len(products),
+                'next_auto_generation': f'In {config.generation_interval_days} days',
                 'errors': errors if errors else 'None'
             })
 

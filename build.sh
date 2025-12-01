@@ -24,3 +24,6 @@ if [ -f "data_enhanced.json" ]; then
     # Fix sequences again after import (in case IDs got corrupted)
     python manage.py fix_db_sequences
 fi
+
+# Generate initial forecasts (runs automatically every 30 days based on sales data)
+python manage.py auto_generate_forecast --force || echo "Forecast generation skipped (may not have enough data yet)"
