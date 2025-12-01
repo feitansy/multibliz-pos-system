@@ -111,10 +111,10 @@
             </a>
         </div>
         <div class="col-12 col-md-4">
-            <button id="generateBtn" class="btn btn-warning w-100 rounded-2 fw-600 py-3 text-white d-flex align-items-center justify-content-center gap-2 shadow-sm" onclick="generateForecasts()">
-                <i class="fas fa-wand-magic-sparkles"></i>
-                <span>Generate AI</span>
-            </button>
+            <a href="{% url 'forecast_list' %}" class="btn btn-warning w-100 rounded-2 fw-600 py-3 text-white d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="fas fa-brain"></i>
+                <span>AI Forecasts</span>
+            </a>
         </div>
         <div class="col-12 col-md-4">
             <a href="{% url 'analytics' %}" class="btn btn-secondary w-100 rounded-2 fw-600 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
@@ -294,9 +294,9 @@
                     {% else %}
                         <div class="text-center py-5">
                             <i class="fas fa-brain fa-4x text-muted mb-3 opacity-50"></i>
-                            <p class="text-muted mb-3">No forecasts available yet.</p>
-                            <a href="{% url 'forecast_generate' %}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-wand-magic-sparkles me-2"></i>Generate Forecasts
+                            <p class="text-muted mb-3">Forecasts are automatically generated every 30 days.</p>
+                            <a href="{% url 'forecast_list' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-chart-line me-2"></i>View Forecasts
                             </a>
                         </div>
                     {% endif %}
@@ -412,60 +412,4 @@
 <!-- Add Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<script>
-function generateForecasts() {
-    const btn = document.getElementById('generateBtn');
-    const originalText = btn.innerHTML;
-    
-    // Disable button and show loading state
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Generating...</span>';
-    
-    // Send AJAX request
-    fetch('{% url "forecast_generate" %}', {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Show success message
-        showNotification('✓ Forecasts generated successfully!', 'success');
-        
-        // Reload page after 2 seconds to show updated forecasts
-        setTimeout(() => {
-            location.reload();
-        }, 2000);
-    })
-    .catch(error => {
-        // Show error message
-        showNotification('✗ Error generating forecasts. Please try again.', 'error');
-        
-        // Restore button
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    });
-}
-
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `auth-toast auth-toast-${type} fade-in-out`;
-    notification.innerHTML = `
-        <div class="toast-content">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'times-circle'} me-2"></i>
-            <span>${message}</span>
-        </div>
-        <button type="button" class="toast-close" onclick="this.parentElement.style.display='none';">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    document.body.appendChild(notification);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-        notification.remove();
-    }, 5000);
-}
-</script>
 {% endblock %}
