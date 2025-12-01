@@ -32,8 +32,10 @@ ENV/
 /staticfiles/
 /static/
 
-# Media files
-/media/
+# Media files (allow folder structure, ignore uploaded files)
+/media/*
+!/media/.gitkeep
+!/media/products/.gitkeep
 
 # Logs
 *.log
