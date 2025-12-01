@@ -15,7 +15,7 @@
             <!-- Form Card -->
             <div class="card shadow-lg border-0 rounded-3">
                 <div class="card-body p-5">
-                    <form method="post" novalidate class="product-form">
+                    <form method="post" enctype="multipart/form-data" novalidate class="product-form">
                         {% csrf_token %}
 
                         <!-- Product Name -->
@@ -82,6 +82,70 @@
                             {% else %}
                                 <small class="form-text">Supplier for this product</small>
                             {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Description (Optional) -->
+                        {% if form.description %}
+                        <div class="form-group mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left text-info"></i>Description
+                                <span class="text-muted small">(Optional)</span>
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="fas fa-exclamation-circle"></i>{{ form.description.errors.0 }}
+                                </div>
+                            {% else %}
+                                <small class="form-text">Enter product description (optional)</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Receipt Label/SKU (Optional) -->
+                        {% if form.label %}
+                        <div class="form-group mb-4">
+                            <label for="{{ form.label.id_for_label }}" class="form-label">
+                                <i class="fas fa-barcode text-secondary"></i>Receipt Label/SKU
+                                <span class="text-muted small">(Optional)</span>
+                            </label>
+                            {{ form.label }}
+                            {% if form.label.errors %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="fas fa-exclamation-circle"></i>{{ form.label.errors.0 }}
+                                </div>
+                            {% else %}
+                                <small class="form-text">Receipt label/SKU (optional)</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Product Image (Optional) -->
+                        {% if form.image %}
+                        <div class="form-group mb-4">
+                            <label for="{{ form.image.id_for_label }}" class="form-label">
+                                <i class="fas fa-image text-primary"></i>Product Image
+                                <span class="text-muted small">(Optional)</span>
+                            </label>
+                            <div class="image-upload-wrapper">
+                                {% if object and object.image %}
+                                    <div class="mb-3">
+                                        <small class="text-muted">Current Image:</small>
+                                        <div class="mt-2">
+                                            <img src="{{ object.image.url }}" alt="{{ object.name }}" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                {{ form.image }}
+                                {% if form.image.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="fas fa-exclamation-circle"></i>{{ form.image.errors.0 }}
+                                    </div>
+                                {% else %}
+                                    <small class="form-text">Upload a product image (JPG, PNG, etc.)</small>
+                                {% endif %}
+                            </div>
                         </div>
                         {% endif %}
 
