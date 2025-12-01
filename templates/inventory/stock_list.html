@@ -57,6 +57,7 @@
                     <table class="table table-hover mb-0" id="stockTable" data-sortable="true">
                         <thead>
                             <tr>
+                                <th data-column="image" style="width: 80px;">Image</th>
                                 <th data-column="product" data-sortable="true">Product</th>
                                 <th data-column="supplier" data-sortable="true">Supplier</th>
                                 <th data-column="quantity" data-sortable="true">Quantity</th>
@@ -76,6 +77,15 @@
                                 {% else %}
                                     <tr class="table-row-healthy">
                                 {% endif %}
+                                    <td data-column="image" style="text-align: center; vertical-align: middle;">
+                                        {% if stock.product.image %}
+                                            <img src="{{ stock.product.image.url }}" alt="{{ stock.product.name }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+                                        {% else %}
+                                            <div class="bg-light text-muted d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 4px;">
+                                                <i class="fas fa-image" style="font-size: 24px; opacity: 0.3;"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
                                     <td data-column="product">
                                         <span class="status-indicator-dot {% if stock.quantity == 0 %}status-critical{% elif stock.quantity <= stock.reorder_level %}status-critical{% elif stock.quantity <= stock.reorder_level|add:15 %}status-warning{% else %}status-healthy{% endif %}"></span>
                                         <strong>{{ stock.product.name }}</strong>
@@ -193,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!noResultsRow) {
                     noResultsRow = document.createElement('tr');
                     noResultsRow.className = 'no-results';
-                    noResultsRow.innerHTML = `<td colspan="6" class="text-center py-4 text-muted">No products found matching "${searchTerm}"</td>`;
+                    noResultsRow.innerHTML = `<td colspan="7" class="text-center py-4 text-muted">No products found matching "${searchTerm}"</td>`;
                     table.querySelector('tbody').appendChild(noResultsRow);
                 }
                 noResultsRow.style.display = '';
