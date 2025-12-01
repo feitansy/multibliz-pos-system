@@ -6,6 +6,19 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<style>
+    /* Sales ID column alignment */
+    #saleTable th[data-column="id"],
+    #saleTable td[data-column="id"] {
+        width: 80px;
+        text-align: center;
+        vertical-align: middle;
+    }
+    
+    #saleTable td[data-column="id"] .badge {
+        display: inline-block;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
