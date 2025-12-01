@@ -18,7 +18,7 @@ class ProductForm(forms.ModelForm):
     
     class Meta:
         model = Product
-        fields = ['name', 'label', 'description', 'price', 'category']
+        fields = ['name', 'label', 'description', 'price', 'category', 'image']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -44,6 +44,10 @@ class ProductForm(forms.ModelForm):
             'category': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter category (optional)',
+            }),
+            'image': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*',
             }),
         }
 

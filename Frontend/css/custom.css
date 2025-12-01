@@ -638,8 +638,8 @@ body.modern-layout {
 
 /* Modern Content Area */
 .modern-content {
-  margin-left: var(--sidebar-width);
-  margin-top: var(--topbar-height);
+
+  
   padding: 30px;
   min-height: calc(100vh - var(--topbar-height));
   transition: var(--transition);
