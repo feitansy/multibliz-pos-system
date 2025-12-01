@@ -69,7 +69,7 @@
 }
 
 .card-header {
-  background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
+  background: #667eea;
   color: white;
   border: none;
   padding: 18px 20px;
@@ -306,7 +306,7 @@
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
+  background: #667eea;
   color: white;
   border: none;
   padding: 20px 24px;
