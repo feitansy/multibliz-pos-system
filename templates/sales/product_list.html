@@ -67,6 +67,7 @@
                     <table class="table table-hover mb-0" id="productTable" data-sortable="true">
                         <thead>
                             <tr>
+                                <th data-column="image" style="width: 90px;">Image</th>
                                 <th data-column="name" data-sortable="true">Name</th>
                                 <th data-column="label" data-sortable="true">Label</th>
                                 <th data-column="price" data-sortable="true">Price</th>
@@ -88,6 +89,15 @@
                                     {% else %}
                                         <tr class="table-row-healthy product-row" data-name="{{ product.name|lower }}" data-category="{{ product.category|lower }}" data-status="healthy">
                                     {% endif %}
+                                        <td data-column="image" style="text-align: center; vertical-align: middle;">
+                                            {% if product.image %}
+                                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-thumbnail" style="width: 70px; height: 70px; object-fit: cover; border-radius: 4px;" title="{{ product.name }}">
+                                            {% else %}
+                                                <div class="bg-light text-muted d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; border-radius: 4px;">
+                                                    <i class="fas fa-image" style="font-size: 28px; opacity: 0.3;"></i>
+                                                </div>
+                                            {% endif %}
+                                        </td>
                                         <td data-column="name">
                                             {% if stock %}
                                                 <span class="status-indicator-dot {% if stock.quantity == 0 %}status-critical{% elif stock.quantity <= stock.reorder_level %}status-critical{% elif stock.quantity <= stock.reorder_level|add:15 %}status-warning{% else %}status-healthy{% endif %}"></span>
