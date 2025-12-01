@@ -77,10 +77,21 @@ class ProductDetailMixin(ProductMixin, DetailView):
 
 class ProductCreateMixin(ProductMixin, CreateView):
     def form_valid(self, form):
+        import logging
+        logger = logging.getLogger(__name__)
+        
         try:
+            # Log form data for debugging
+            logger.info(f"ProductCreateMixin.form_valid - Form data: {form.cleaned_data.keys()}")
+            logger.info(f"ProductCreateMixin.form_valid - Request FILES: {list(self.request.FILES.keys()) if self.request.FILES else 'No files'}")
+            if 'image' in form.cleaned_data:
+                logger.info(f"ProductCreateMixin.form_valid - Image in form: {form.cleaned_data['image']}")
+            
             with transaction.atomic():
                 # Save the product first (also triggers signal to create Stock)
                 response = super().form_valid(form)
+                
+                logger.info(f"ProductCreateMixin.form_valid - Product saved: {self.object}, image: {self.object.image}")
                 
                 # Update the auto-created stock record with the supplier
                 supplier = form.cleaned_data.get('supplier')
@@ -97,7 +108,6 @@ class ProductCreateMixin(ProductMixin, CreateView):
                 return response
         except Exception as e:
             # Log the error for debugging
-            import logging
             logger = logging.getLogger(__name__)
             logger.error(f"Error creating product: {str(e)}", exc_info=True)
             messages.error(self.request, f"Error creating product: {str(e)}")
