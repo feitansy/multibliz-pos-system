@@ -536,7 +536,7 @@ class ReturnDetailView(LoginRequiredMixin, DetailView):
 class ReturnCreateView(LoginRequiredMixin, CreateView):
     model = Return
     template_name = 'sales/return_form.html'
-    fields = ['sale', 'quantity_returned', 'reason', 'reason_details', 'refund_amount']
+    form_class = ReturnForm
     success_url = reverse_lazy('return_list')
     
     def get_context_data(self, **kwargs):
@@ -545,6 +545,21 @@ class ReturnCreateView(LoginRequiredMixin, CreateView):
         return context
     
     def form_valid(self, form):
+        # Double-check for duplicate returns (in case of race condition)
+        sale = form.cleaned_data.get('sale')
+        if sale:
+            active_returns = Return.objects.filter(
+                sale=sale,
+                status__in=['pending', 'approved', 'completed']
+            ).exists()
+            
+            if active_returns:
+                form.add_error('sale', 
+                    f"A return request already exists for this sale. "
+                    f"Please check the return status or contact an administrator."
+                )
+                return self.form_invalid(form)
+        
         # Set processed_by to current user
         form.instance.processed_by = self.request.user.username
         messages.success(self.request, "Return request created successfully.")

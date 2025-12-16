@@ -120,3 +120,23 @@ class ReturnForm(forms.ModelForm):
                 'class': 'form-control form-select',
             }),
         }
+    
+    def clean_sale(self):
+        """Validate that the sale doesn't already have an active return"""
+        sale = self.cleaned_data.get('sale')
+        
+        if sale:
+            # Check if there's already a pending, approved, or completed return for this sale
+            active_returns = Return.objects.filter(
+                sale=sale,
+                status__in=['pending', 'approved', 'completed']
+            ).exists()
+            
+            if active_returns:
+                raise forms.ValidationError(
+                    f"A return request already exists for Sale #{sale.id}. "
+                    f"Only one active return per sale is allowed. "
+                    f"Please check the return status or contact an administrator."
+                )
+        
+        return sale
