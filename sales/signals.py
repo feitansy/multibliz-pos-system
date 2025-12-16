@@ -10,15 +10,15 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Return)
 def auto_process_return(sender, instance, created, update_fields, **kwargs):
     """
-    Automatically process returns and adjust inventory when return status changes to 'completed'
+    Automatically process returns and adjust inventory when return status changes to 'approved' or 'completed'
     
-    When a return is marked as 'completed':
+    When a return is marked as 'approved' or 'completed':
     1. Add the returned quantity back to stock
     2. Log the inventory adjustment
     """
     
-    # Only process if status changed to 'completed'
-    if instance.status == 'completed':
+    # Only process if status changed to 'approved' or 'completed'
+    if instance.status in ['approved', 'completed']:
         try:
             # Get the product from the sale
             product = instance.sale.product
@@ -32,7 +32,7 @@ def auto_process_return(sender, instance, created, update_fields, **kwargs):
             stock.save()
             
             logger.info(
-                f"Return #{instance.id} processed: "
+                f"Return #{instance.id} ({instance.get_status_display()}): "
                 f"Product '{product.name}' stock updated from {old_quantity} to {stock.quantity} "
                 f"(+{instance.quantity_returned} units returned)"
             )

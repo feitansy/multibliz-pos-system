@@ -71,6 +71,7 @@ class Sale(models.Model):
 class Return(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('approved', 'Approved'),
         ('rejected', 'Rejected'),
         ('completed', 'Completed'),
     ]
