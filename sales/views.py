@@ -280,6 +280,7 @@ def process_transaction(request):
         
         cart_items = data.get('items', [])
         customer_name = data.get('customer_name', '').strip() if data.get('customer_name') else ''
+        transaction_date = data.get('transaction_date', None)
         payment_method = data.get('payment_method', 'cash')
         amount_paid = data.get('amount_paid', 0)
         change_amount = data.get('change_amount', 0)
@@ -325,6 +326,7 @@ def process_transaction(request):
                     quantity=quantity,
                     total_price=item_total,
                     customer_name=customer_name,
+                    transaction_date=transaction_date,
                     payment_method=payment_method,
                     amount_paid=amount_paid,
                     change_amount=change_amount,

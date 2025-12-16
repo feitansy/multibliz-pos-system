@@ -156,13 +156,18 @@
                     <span class="pos-change-amount fw-bold" id="changeAmount">₱0.00</span>
                 </div>
 
-                <!-- Customer Name -->
+                <!-- Customer Name & Transaction Date -->
                 <div class="pos-customer-section">
                     <input 
                         type="text" 
                         id="customerName" 
-                        class="form-control form-control-sm mb-3" 
+                        class="form-control form-control-sm mb-2" 
                         placeholder="Customer name (Optional)"
+                    >
+                    <input 
+                        type="date" 
+                        id="transactionDate" 
+                        class="form-control form-control-sm mb-3" 
                     >
                 </div>
 
@@ -715,6 +720,22 @@
         margin-bottom: 0.35rem;
     }
 
+    .pos-customer-section input[type="date"],
+    .pos-customer-section input[type="text"] {
+        background-color: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 0.35rem;
+        font-size: 0.85rem;
+        padding: 0.4rem 0.5rem;
+    }
+
+    .pos-customer-section input[type="date"]:focus,
+    .pos-customer-section input[type="text"]:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+        outline: none;
+    }
+
     /* Action Buttons */
     .pos-action-buttons {
         display: flex;
@@ -897,6 +918,12 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     updateTime();
     setInterval(updateTime, 1000);
+    
+    // Initialize date field to today
+    const dateInput = document.getElementById('transactionDate');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
 });
 
 // Event Listeners
@@ -1108,6 +1135,9 @@ function completeTransaction(event) {
     const customerNameEl = document.getElementById('customerName');
     const customerName = customerNameEl ? customerNameEl.value : '';
     
+    const transactionDateEl = document.getElementById('transactionDate');
+    const transactionDate = transactionDateEl ? transactionDateEl.value : new Date().toISOString().split('T')[0];
+    
     const totalAmountEl = document.getElementById('totalAmount');
     const total = totalAmountEl ? parseFloat(totalAmountEl.textContent.replace('₱', '')) : 0;
 
@@ -1135,6 +1165,7 @@ function completeTransaction(event) {
             price: item.price
         })),
         customer_name: customerName,
+        transaction_date: transactionDate,
         payment_method: currentPaymentMethod,
         amount_paid: amountPaid,
         change_amount: changeAmount > 0 ? changeAmount : 0,
@@ -1227,6 +1258,8 @@ function resetTransaction() {
     document.getElementById('discountAmount').value = '';
     document.getElementById('productSearch').value = '';
     document.getElementById('searchResults').innerHTML = '';
+    // Reset date to today
+    document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('productSearch').focus();
 }
 
