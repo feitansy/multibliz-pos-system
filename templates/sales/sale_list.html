@@ -36,23 +36,27 @@
     {% if sales %}
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom p-4">
-                <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 mb-3">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-lg-between gap-3 mb-3">
+                    <!-- Left Section: Title -->
                     <div class="d-flex align-items-center gap-2">
                         <i class="fas fa-receipt text-primary fs-6"></i>
                         <h5 class="mb-0 fw-bold">Sales History</h5>
                     </div>
-                    <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-3 ms-lg-auto w-100 w-lg-auto justify-content-end">
-                        <span class="badge bg-secondary text-uppercase letter-spacing-sm" id="sales-count-badge" data-total="{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ sales|length }}{% endif %}">{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ sales|length }}{% endif %} transactions</span>
-                        <a href="{% url 'sale_print_report' %}?report_type=month" class="btn btn-sm btn-outline-primary" title="Print Current Month">
-                            <i class="fas fa-print me-1"></i>Print Month
-                        </a>
-                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#printReportModal" title="Print Custom Report">
+                    
+                    <!-- Right Section: Stats and Actions -->
+                    <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 w-100 w-lg-auto">
+                        <span class="badge bg-secondary text-uppercase letter-spacing-sm" id="sales-count-badge" data-total="{% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ sales|length }}{% endif %}">
+                            {% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ sales|length }}{% endif %} TRANSACTIONS
+                        </span>
+                        
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#printReportModal" title="Print Sales Report">
                             <i class="fas fa-file-pdf me-1"></i>Print
                         </button>
-                        <form method="GET" class="d-flex">
-                            <div class="sales-search-wrapper flex-grow-1 flex-sm-grow-0">
+                        
+                        <form method="GET" class="d-flex flex-grow-1 flex-md-grow-0">
+                            <div class="sales-search-wrapper flex-grow-1 flex-md-grow-0 ms-md-auto">
                                 <i class="fas fa-search"></i>
-                                <input type="text" name="search" class="form-control sales-search-input" placeholder="   Search transactions" value="{{ search_query }}">
+                                <input type="text" name="search" class="form-control sales-search-input" placeholder="Search transactions" value="{{ search_query }}">
                             </div>
                         </form>
                     </div>
