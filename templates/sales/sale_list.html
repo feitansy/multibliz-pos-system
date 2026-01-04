@@ -105,6 +105,35 @@
                     </div>
                 </form>
                 
+                <!-- Return Status Filters -->
+                <form method="GET" class="row g-3 align-items-end mt-3">
+                    <div class="col-auto">
+                        <label class="form-label small fw-bold">Filter by Return Status:</label>
+                        <div class="btn-group" role="group" aria-label="Return status options">
+                            <input type="radio" class="btn-check" name="return_status" id="returnAll" value="" {% if return_status == '' %}checked{% endif %}>
+                            <label class="btn btn-outline-secondary btn-sm" for="returnAll">All Sales</label>
+                            
+                            <input type="radio" class="btn-check" name="return_status" id="returnReturned" value="returned" {% if return_status == 'returned' %}checked{% endif %}>
+                            <label class="btn btn-outline-warning btn-sm" for="returnReturned">Returned</label>
+                            
+                            <input type="radio" class="btn-check" name="return_status" id="returnPending" value="pending" {% if return_status == 'pending' %}checked{% endif %}>
+                            <label class="btn btn-outline-info btn-sm" for="returnPending">Pending</label>
+                            
+                            <input type="radio" class="btn-check" name="return_status" id="returnApproved" value="approved" {% if return_status == 'approved' %}checked{% endif %}>
+                            <label class="btn btn-outline-success btn-sm" for="returnApproved">Approved</label>
+                            
+                            <input type="radio" class="btn-check" name="return_status" id="returnRejected" value="rejected" {% if return_status == 'rejected' %}checked{% endif %}>
+                            <label class="btn btn-outline-danger btn-sm" for="returnRejected">Rejected</label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-filter me-1"></i>Filter
+                        </button>
+                    </div>
+                </form>
+                
                 <!-- Summary Stats -->
                 {% if total_quantity %}
                 <div class="row g-2 mt-3">

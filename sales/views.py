@@ -50,13 +50,45 @@ class SaleListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         from datetime import datetime, timedelta
         queryset = super().get_queryset()
-        # Exclude sales that have been fully returned (approved or completed returns)
         from django.db.models import Exists, OuterRef, Q
-        approved_returns = Return.objects.filter(
-            sale=OuterRef('pk'),
-            status__in=['approved', 'completed']
-        )
-        queryset = queryset.exclude(Exists(approved_returns))
+        
+        # Add return status filtering
+        return_status = self.request.GET.get('return_status', '').strip()
+        if return_status == 'returned':
+            # Show only sales with approved/completed returns
+            approved_returns = Return.objects.filter(
+                sale=OuterRef('pk'),
+                status__in=['approved', 'completed']
+            )
+            queryset = queryset.filter(Exists(approved_returns))
+        elif return_status == 'pending':
+            # Show only sales with pending returns
+            pending_returns = Return.objects.filter(
+                sale=OuterRef('pk'),
+                status='pending'
+            )
+            queryset = queryset.filter(Exists(pending_returns))
+        elif return_status == 'approved':
+            # Show only sales with approved returns
+            approved_returns = Return.objects.filter(
+                sale=OuterRef('pk'),
+                status='approved'
+            )
+            queryset = queryset.filter(Exists(approved_returns))
+        elif return_status == 'rejected':
+            # Show only sales with rejected returns
+            rejected_returns = Return.objects.filter(
+                sale=OuterRef('pk'),
+                status='rejected'
+            )
+            queryset = queryset.filter(Exists(rejected_returns))
+        else:
+            # Default: exclude fully returned sales (approved/completed)
+            approved_returns = Return.objects.filter(
+                sale=OuterRef('pk'),
+                status__in=['approved', 'completed']
+            )
+            queryset = queryset.exclude(Exists(approved_returns))
         
         # Add search functionality
         search_query = self.request.GET.get('search', '').strip()
@@ -120,6 +152,7 @@ class SaleListView(LoginRequiredMixin, ListView):
         context['date_range'] = self.request.GET.get('date_range', '')
         context['start_date'] = self.request.GET.get('start_date', '')
         context['end_date'] = self.request.GET.get('end_date', '')
+        context['return_status'] = self.request.GET.get('return_status', '')
         
         # Calculate totals for the filtered sales
         from django.db.models import Sum
