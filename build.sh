@@ -5,6 +5,9 @@ set -o errexit
 # Install dependencies
 pip install -r requirements.txt
 
+# Create media directory if it doesn't exist
+mkdir -p media/products
+
 # Collect static files
 python manage.py collectstatic --noinput
 
