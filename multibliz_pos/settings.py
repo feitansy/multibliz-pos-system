@@ -163,8 +163,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Use cloud storage for product images in production, local storage in development
 DEFAULT_FILE_STORAGE = 'multibliz_pos.storage.ProductImageStorage'
 
-# Google Cloud Storage configuration (for production)
-GCS_BUCKET_NAME = os.environ.get('GCS_BUCKET_NAME', 'multibliz-pos-media')
+# AWS S3 configuration (for production - Free Tier: 5GB storage + free requests)
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', 'multibliz-pos-media')
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-1')
+AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN')
+AWS_DEFAULT_ACL = 'public-read'
+AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
 
 # Whitenoise configuration for serving static and media files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

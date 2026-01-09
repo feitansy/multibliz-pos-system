@@ -26,9 +26,9 @@ services:
         value: "True"
       - key: ALLOWED_HOSTS
         value: ".onrender.com"
-      - key: USE_GCS
+      - key: USE_S3
         value: "True"
-      - key: GCS_BUCKET_NAME
+      - key: AWS_STORAGE_BUCKET_NAME
         value: "multibliz-pos-media"
-      - key: GOOGLE_APPLICATION_CREDENTIALS
-        sync: false
+      - key: AWS_S3_REGION_NAME
+        value: "us-east-1"
