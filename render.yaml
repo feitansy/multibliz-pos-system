@@ -23,7 +23,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: DEBUG
-        value: "False"
+        value: "True"
       - key: ALLOWED_HOSTS
         value: ".onrender.com"
     disks:

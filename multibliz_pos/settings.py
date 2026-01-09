@@ -163,8 +163,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Use default storage for product images (custom storage causes issues on ephemeral filesystems)
 # DEFAULT_FILE_STORAGE = 'multibliz_pos.storage.ProductImageStorage'
 
-# Whitenoise configuration for serving static files in production
+# Whitenoise configuration for serving static and media files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Configure Whitenoise to also serve media files
+WHITENOISE_AUTOREFRESH = True
+WHITENOISE_USE_FINDERS = True
 
 # Authentication settings
 AUTH_USER_MODEL = 'accounts.User'
