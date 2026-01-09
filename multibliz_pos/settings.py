@@ -160,8 +160,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Use default storage for product images (custom storage causes issues on ephemeral filesystems)
-# DEFAULT_FILE_STORAGE = 'multibliz_pos.storage.ProductImageStorage'
+# Use cloud storage for product images in production, local storage in development
+DEFAULT_FILE_STORAGE = 'multibliz_pos.storage.ProductImageStorage'
+
+# Google Cloud Storage configuration (for production)
+GCS_BUCKET_NAME = os.environ.get('GCS_BUCKET_NAME', 'multibliz-pos-media')
 
 # Whitenoise configuration for serving static and media files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

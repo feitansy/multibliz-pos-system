@@ -26,7 +26,9 @@ services:
         value: "True"
       - key: ALLOWED_HOSTS
         value: ".onrender.com"
-    disks:
-      - name: media
-        mountPath: /opt/render/project/src/media
-        sizeGB: 1
+      - key: USE_GCS
+        value: "True"
+      - key: GCS_BUCKET_NAME
+        value: "multibliz-pos-media"
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        sync: false
