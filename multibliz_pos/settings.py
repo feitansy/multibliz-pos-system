@@ -160,8 +160,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Use custom storage for product images
-DEFAULT_FILE_STORAGE = 'multibliz_pos.storage.ProductImageStorage'
+# Use default storage for product images (custom storage causes issues on ephemeral filesystems)
+# DEFAULT_FILE_STORAGE = 'multibliz_pos.storage.ProductImageStorage'
 
 # Whitenoise configuration for serving static files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

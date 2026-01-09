@@ -1,5 +1,4 @@
 from django.db import models
-from multibliz_pos.storage import ProductImageStorage
 
 class Product(models.Model):
     name = models.CharField(max_length=255)
@@ -11,8 +10,7 @@ class Product(models.Model):
         upload_to='products/',
         blank=True,
         null=True,
-        help_text="Product image",
-        storage=ProductImageStorage()
+        help_text="Product image"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
