@@ -4,6 +4,7 @@ Uses local filesystem in development, Google Cloud Storage in production.
 """
 import os
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 
 # Check if we're in production and have GCS credentials
 USE_GCS = os.getenv('USE_GCS', 'False').lower() == 'true' or (
@@ -26,16 +27,12 @@ if USE_GCS:
     
     except ImportError:
         # Fallback to local storage if django-storages not installed
-        from django.core.files.storage import FileSystemStorage
-        
         class ProductImageStorage(FileSystemStorage):
             """Fallback to local filesystem"""
             location = os.path.join(settings.MEDIA_ROOT, 'products')
             base_url = os.path.join(settings.MEDIA_URL, 'products/')
 else:
     # Use local filesystem storage for development
-    from django.core.files.storage import FileSystemStorage
-    
     class ProductImageStorage(FileSystemStorage):
         """Local filesystem storage for development"""
         location = os.path.join(settings.MEDIA_ROOT, 'products')
