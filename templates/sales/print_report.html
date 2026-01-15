@@ -1,186 +1,363 @@
-{% extends 'base.html' %}
-
-{% block title %}Print Sales Report - Multibliz POS{% endblock %}
-
-{% block extra_head %}
-<style>
-    @media print {
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Report - Multibliz POS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-size: 12pt;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background-color: #f5f5f5;
         }
-        .no-print {
-            display: none !important;
+        
+        .print-wrapper {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        .table {
-            page-break-inside: avoid;
+        
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .print-wrapper {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .report-header {
+                page-break-inside: avoid;
+            }
+            
+            table {
+                page-break-inside: auto;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            thead {
+                display: table-header-group;
+            }
+            
+            tfoot {
+                display: table-footer-group;
+            }
         }
-        tr {
-            page-break-inside: avoid;
+        
+        /* Header */
+        .report-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #333;
+            padding-bottom: 20px;
         }
-    }
-    
-    .report-header {
-        text-align: center;
-        margin-bottom: 2rem;
-        border-bottom: 2px solid #333;
-        padding-bottom: 1rem;
-    }
-    
-    .report-summary {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-        padding: 1rem;
-        background-color: #f8f9fa;
-        border-radius: 0.5rem;
-    }
-    
-    .summary-item {
-        text-align: center;
-    }
-    
-    .summary-value {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #28a745;
-    }
-    
-    .summary-label {
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-    
-    .print-controls {
-        margin-bottom: 1rem;
-        gap: 0.5rem;
-    }
-</style>
-{% endblock %}
+        
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+        
+        .report-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .report-period {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .report-generated {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+        }
+        
+        /* Summary Section */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .summary-box {
+            text-align: center;
+            padding: 15px;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .summary-box:last-child {
+            border-right: none;
+        }
+        
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .summary-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2ecc71;
+        }
+        
+        /* Table */
+        .sales-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-size: 13px;
+        }
+        
+        .sales-table thead {
+            background-color: #34495e;
+            color: white;
+        }
+        
+        .sales-table th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #34495e;
+        }
+        
+        .sales-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .sales-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .sales-table tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .sales-table tfoot {
+            background-color: #ecf0f1;
+            font-weight: bold;
+        }
+        
+        .sales-table tfoot td {
+            padding: 12px 8px;
+            border-top: 2px solid #34495e;
+            border-bottom: 2px solid #34495e;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .row-number {
+            width: 40px;
+            color: #999;
+        }
+        
+        /* Controls */
+        .print-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        /* Footer */
+        .report-footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #999;
+            font-size: 12px;
+            font-style: italic;
+        }
+        
+        .alert {
+            padding: 20px;
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
 
-{% block content %}
-<div class="container-fluid px-4 py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-        <h2 class="fw-bold">{{ report_title }}</h2>
-        <div class="print-controls d-flex">
-            <button onclick="window.print()" class="btn btn-primary btn-sm">
-                <i class="fas fa-print me-1"></i>Print
+    <div class="print-wrapper">
+        <!-- Print Controls -->
+        <div class="print-controls no-print">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i> Print Report
             </button>
-            <a href="{% url 'sale_list' %}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-arrow-left me-1"></i>Back
-            </a>
+            <button onclick="window.history.back()" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
         </div>
-    </div>
-    
-    <!-- Report Header -->
-    <div class="report-header">
-        <h1 class="fw-bold mb-1">MULTIBLIZ POS SYSTEM</h1>
-        <h4>{{ report_title }}</h4>
-        {% if start_date %}
-            <p class="text-muted mb-0">
-                Period: <strong>{{ start_date }}{% if end_date %} to {{ end_date }}{% endif %}</strong>
-            </p>
-        {% endif %}
-        <p class="text-muted small">Generated: <strong>{% now 'M d, Y H:i' %}</strong></p>
-    </div>
-    
-    <!-- Summary Statistics -->
-    <div class="report-summary">
-        <div class="summary-item">
-            <div class="summary-label">Total Transactions</div>
-            <div class="summary-value">{{ total_sales }}</div>
-        </div>
-        <div class="summary-item">
-            <div class="summary-label">Total Quantity Sold</div>
-            <div class="summary-value">{{ total_quantity }} units</div>
-        </div>
-        <div class="summary-item">
-            <div class="summary-label">Total Revenue</div>
-            <div class="summary-value">₱{{ total_revenue|floatformat:2 }}</div>
-        </div>
-        {% if total_discount %}
-        <div class="summary-item">
-            <div class="summary-label">Total Discount</div>
-            <div class="summary-value">₱{{ total_discount|floatformat:2 }}</div>
-        </div>
-        {% endif %}
-    </div>
-    
-    <!-- Sales Table -->
-    {% if sales %}
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Total Price</th>
-                            <th>Discount</th>
-                            <th>Payment Method</th>
-                            <th>Customer</th>
-                            <th>Date & Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for sale in sales %}
-                        <tr>
-                            <td>{{ sale.id }}</td>
-                            <td>{{ sale.product.name }}</td>
-                            <td class="text-center">{{ sale.quantity }}</td>
-                            <td class="text-right">₱{{ sale.total_price|floatformat:2 }}</td>
-                            <td class="text-right">₱{{ sale.discount|floatformat:2 }}</td>
-                            <td>
-                                {% if sale.payment_method == 'cash' %}
-                                    Cash
-                                {% elif sale.payment_method == 'card' %}
-                                    Card
-                                {% elif sale.payment_method == 'check' %}
-                                    Check
-                                {% else %}
-                                    {{ sale.payment_method }}
-                                {% endif %}
-                            </td>
-                            <td>{{ sale.customer_name|default:"—" }}</td>
-                            <td>{{ sale.sale_date|date:"M d, Y H:i" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot class="table-light fw-bold">
-                        <tr>
-                            <td colspan="2">TOTAL</td>
-                            <td class="text-center">{{ total_quantity }}</td>
-                            <td class="text-right">₱{{ total_revenue|floatformat:2 }}</td>
-                            <td class="text-right">₱{{ total_discount|floatformat:2 }}</td>
-                            <td colspan="3"></td>
-                        </tr>
-                    </tfoot>
-                </table>
+        
+        <!-- Report Header -->
+        <div class="report-header">
+            <div class="company-name">MULTIBLIZ POS SYSTEM</div>
+            <div class="report-title">{{ report_title }}</div>
+            {% if start_date %}
+            <div class="report-period">
+                Period: {{ start_date }}{% if end_date %} to {{ end_date }}{% endif %}
             </div>
+            {% endif %}
+            <div class="report-generated">Generated on: {% now 'F d, Y \a\t H:i' %}</div>
+        </div>
+        
+        <!-- Summary Statistics -->
+        <div class="summary-grid">
+            <div class="summary-box">
+                <div class="summary-label">Total Transactions</div>
+                <div class="summary-value">{{ total_sales }}</div>
+            </div>
+            <div class="summary-box">
+                <div class="summary-label">Total Quantity</div>
+                <div class="summary-value">{{ total_quantity }} <span style="font-size: 12px;">units</span></div>
+            </div>
+            <div class="summary-box">
+                <div class="summary-label">Total Revenue</div>
+                <div class="summary-value">₱{{ total_revenue|floatformat:2 }}</div>
+            </div>
+            {% if total_discount %}
+            <div class="summary-box">
+                <div class="summary-label">Total Discount</div>
+                <div class="summary-value">₱{{ total_discount|floatformat:2 }}</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sales Table -->
+        {% if sales %}
+        <table class="sales-table">
+            <thead>
+                <tr>
+                    <th class="row-number">#</th>
+                    <th style="width: 30%;">Product</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-right">Total Price</th>
+                    <th class="text-right">Discount</th>
+                    <th class="text-center">Payment</th>
+                    <th>Customer</th>
+                    <th class="text-right">Date & Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                <tr>
+                    <td class="row-number">{{ sale.id }}</td>
+                    <td><strong>{{ sale.product.name }}</strong></td>
+                    <td class="text-center">{{ sale.quantity }}</td>
+                    <td class="text-right">₱{{ sale.total_price|floatformat:2 }}</td>
+                    <td class="text-right">{% if sale.discount %}₱{{ sale.discount|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="text-center">
+                        {% if sale.payment_method == 'cash' %}
+                            Cash
+                        {% elif sale.payment_method == 'card' %}
+                            Card
+                        {% elif sale.payment_method == 'check' %}
+                            Check
+                        {% else %}
+                            {{ sale.payment_method }}
+                        {% endif %}
+                    </td>
+                    <td>{{ sale.customer_name|default:"—" }}</td>
+                    <td class="text-right">{{ sale.sale_date|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" class="text-right">TOTAL</td>
+                    <td class="text-center">{{ total_quantity }}</td>
+                    <td class="text-right">₱{{ total_revenue|floatformat:2 }}</td>
+                    <td class="text-right">₱{{ total_discount|floatformat:2 }}</td>
+                    <td colspan="3"></td>
+                </tr>
+            </tfoot>
+        </table>
+        {% else %}
+        <div class="alert">
+            <i class="fas fa-info-circle"></i> No sales records found for the selected period.
+        </div>
+        {% endif %}
+        
+        <!-- Footer -->
+        <div class="report-footer no-print">
+            <p>This is a computer-generated report. No signature required.</p>
         </div>
     </div>
-    {% else %}
-    <div class="alert alert-info text-center py-4">
-        <i class="fas fa-info-circle me-2"></i>
-        No sales records found for the selected period.
-    </div>
-    {% endif %}
-    
-    <!-- Footer -->
-    <div class="text-center mt-5 text-muted small no-print">
-        <p>This is a computer-generated report. No signature required.</p>
-    </div>
-</div>
 
-<script>
-    // Auto-print if requested
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('auto_print') === 'true') {
-        window.addEventListener('load', function() {
-            window.print();
-        });
-    }
-</script>
-{% endblock %}
+{% block content %}{% endblock %}
+</body>
+</html>
