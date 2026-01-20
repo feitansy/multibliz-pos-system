@@ -86,6 +86,17 @@ class SaleForm(forms.ModelForm):
 class ReturnForm(forms.ModelForm):
     """Form for creating and updating returns"""
     
+    # Explicitly define sale field with ordered queryset
+    sale = forms.ModelChoiceField(
+        queryset=Sale.objects.all().order_by('-id'),
+        widget=forms.Select(attrs={
+            'class': 'form-control form-select',
+            'required': True,
+        }),
+        label='Sale',
+        help_text='Select the sale to return'
+    )
+    
     class Meta:
         model = Return
         fields = ['sale', 'quantity_returned', 'reason', 'reason_details', 'refund_amount', 'status']

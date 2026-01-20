@@ -40,7 +40,7 @@ class Sale(models.Model):
     change_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
-        return f"Sale of {self.product.name} - {self.quantity} units"
+        return f"Sale #{self.id} - {self.product.name} ({self.quantity} units) - ₱{self.total_price}"
     
     @property
     def has_approved_return(self):
