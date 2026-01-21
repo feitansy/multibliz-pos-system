@@ -12,7 +12,7 @@
 </head>
 <body class="modern-layout">
     {% with request.resolver_match.url_name as url_name %}
-    {% if url_name not in 'login|signup|password_reset|password_reset_done|password_reset_confirm|password_reset_complete
+    {% if url_name not in 'login|signup|password_reset|password_reset_done|password_reset_confirm|password_reset_complete' %}
     
     <!-- Modern Sidebar -->
     <div class="modern-sidebar">
@@ -145,8 +145,7 @@
     {% endwith %}
     
     <!-- Main Content Area -->
-    {% with request.resolver_match.url_name as url_name %}
-    {% if url_name not in 'login|signup|password_reset|password_reset_done|password_reset_confirm|password_reset_complete' %}
+    {% if request.resolver_match.url_name not in 'login|signup|password_reset|password_reset_done|password_reset_confirm|password_reset_complete' %}
     <div class="modern-content">
     {% else %}
     <div class="container-fluid">
@@ -173,7 +172,6 @@
         {% endif %}
         {% block content %}{% endblock %}
     </div>
-    {% endwith %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
