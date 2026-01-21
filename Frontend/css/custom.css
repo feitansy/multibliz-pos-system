@@ -240,30 +240,6 @@ body.modern-layout {
   letter-spacing: 1px;
 }
 
-/* Sidebar Toggle Button */
-.sidebar-toggle {
-  position: absolute;
-  left: 200px;
-  top: 25px;
-  width: 30px;
-  height: 30px;
-  background: var(--sidebar-bg);
-  border: 2px solid var(--sidebar-item-hover);
-  border-radius: 50%;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: var(--transition);
-  z-index: 1001;
-}
-
-.sidebar-toggle:hover {
-  background: var(--purple-primary);
-  border-color: var(--purple-primary);
-}
-
 /* Sidebar Navigation */
 .sidebar-nav {
   padding: 20px 0;

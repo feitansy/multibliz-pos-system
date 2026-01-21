@@ -15,12 +15,4 @@ urlpatterns = [
     path('settings/users/delete/<int:user_id>/', views.delete_user, name='delete_user'),
     path('settings/users/role/<int:user_id>/', views.update_user_role, name='update_user_role'),
     path('change-password/', views.change_password, name='change_password'),
-
-    # OTP-based Password Reset URLs (replaces old token-based reset)
-    path('forgot-password/', views.forgot_password_request, name='forgot_password_request'),
-    path('verify-otp/', views.verify_otp, name='verify_otp'),
-    path('reset-password/', views.reset_password, name='reset_password'),
-    
-    # Keep old URLs for backward compatibility (redirect to new flow)
-    path('password_reset/', views.forgot_password_request, name='password_reset'),
 ]

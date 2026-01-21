@@ -12,17 +12,13 @@
 </head>
 <body class="modern-layout">
     {% with request.resolver_match.url_name as url_name %}
-    {% if url_name not in 'login|signup|password_reset|password_reset_done|password_reset_confirm|password_reset_complete|forgot_password_request|verify_otp|reset_password' %}
+    {% if url_name not in 'login|signup|password_reset|password_reset_done|password_reset_confirm|password_reset_complete
     
     <!-- Modern Sidebar -->
     <div class="modern-sidebar">
         <div class="sidebar-header">
             <img src="{% static 'images/multibliz-logo.png' %}" alt="Multibliz International Corporation" class="sidebar-logo-img" title="Multibliz International Corporation">
         </div>
-        
-        <button class="sidebar-toggle" onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
         
         <nav class="sidebar-nav">
             <a href="{% url 'dashboard' %}" class="sidebar-item {% if url_name == 'dashboard' %}active{% endif %}">
