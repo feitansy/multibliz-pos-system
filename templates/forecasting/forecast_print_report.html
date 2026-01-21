@@ -318,11 +318,7 @@
                 <tr style="border: none;">
                     <td style="border: none; padding: 8px 0;"><strong>Average Revenue per Forecast:</strong></td>
                     <td style="border: none; padding: 8px 0; text-align: right;">
-                        {% if total_forecasts > 0 %}
-                            ₱{{ total_projected_revenue|add:0|div:total_forecasts|floatformat:2 }}
-                        {% else %}
-                            ₱0.00
-                        {% endif %}
+                        ₱{{ average_revenue_per_forecast|floatformat:2 }}
                     </td>
                 </tr>
             </table>

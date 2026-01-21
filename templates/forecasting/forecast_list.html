@@ -147,8 +147,6 @@
                             <option value="forecast_date" {% if sort_by == 'forecast_date' %}selected{% endif %}>Date (Oldest First)</option>
                             <option value="-predicted_quantity" {% if sort_by == '-predicted_quantity' %}selected{% endif %}>Quantity (High to Low)</option>
                             <option value="predicted_quantity" {% if sort_by == 'predicted_quantity' %}selected{% endif %}>Quantity (Low to High)</option>
-                            <option value="-predicted_revenue" {% if sort_by == '-predicted_revenue' %}selected{% endif %}>Revenue (High to Low)</option>
-                            <option value="predicted_revenue" {% if sort_by == 'predicted_revenue' %}selected{% endif %}>Revenue (Low to High)</option>
                             <option value="algorithm_used" {% if sort_by == 'algorithm_used' %}selected{% endif %}>Algorithm (A-Z)</option>
                             <option value="product__name" {% if sort_by == 'product__name' %}selected{% endif %}>Product Name (A-Z)</option>
                         </select>

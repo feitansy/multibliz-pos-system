@@ -223,6 +223,9 @@ class ForecastPrintReportView(LoginRequiredMixin, TemplateView):
         # Calculate revenue: Sum of (predicted_quantity * product.price)
         total_projected_revenue = sum([f.predicted_revenue for f in forecasts]) if forecasts else 0
         
+        # Calculate average revenue per forecast
+        average_revenue_per_forecast = total_projected_revenue / total_forecasts if total_forecasts > 0 else 0
+        
         # Count by algorithm
         xgboost_count = forecasts.filter(algorithm_used='xgboost').count()
         prophet_count = forecasts.filter(algorithm_used='prophet').count()
@@ -236,6 +239,7 @@ class ForecastPrintReportView(LoginRequiredMixin, TemplateView):
         context['total_forecasts'] = total_forecasts
         context['total_predicted_units'] = total_predicted_units
         context['total_projected_revenue'] = total_projected_revenue
+        context['average_revenue_per_forecast'] = average_revenue_per_forecast
         context['xgboost_count'] = xgboost_count
         context['prophet_count'] = prophet_count
         context['all_products'] = all_products
