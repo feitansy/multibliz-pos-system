@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.views.generic import ListView, DetailView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.db.models.functions import TruncDate
 from .models import Forecast, ForecastConfig
 from sales.models import Sale
@@ -209,7 +209,6 @@ class ForecastPrintReportView(LoginRequiredMixin, TemplateView):
         valid_sorts = [
             '-forecast_date', 'forecast_date',
             '-predicted_quantity', 'predicted_quantity',
-            '-predicted_revenue', 'predicted_revenue',
             'algorithm_used', '-algorithm_used',
             'product__name', '-product__name'
         ]
@@ -221,7 +220,8 @@ class ForecastPrintReportView(LoginRequiredMixin, TemplateView):
         # Calculate summary statistics
         total_forecasts = forecasts.count()
         total_predicted_units = forecasts.aggregate(total=Sum('predicted_quantity'))['total'] or 0
-        total_projected_revenue = forecasts.aggregate(total=Sum('predicted_revenue'))['total'] or 0
+        # Calculate revenue: Sum of (predicted_quantity * product.price)
+        total_projected_revenue = sum([f.predicted_revenue for f in forecasts]) if forecasts else 0
         
         # Count by algorithm
         xgboost_count = forecasts.filter(algorithm_used='xgboost').count()
