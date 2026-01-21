@@ -95,12 +95,66 @@
             </div>
         </div>
 
-        <!-- Forecast Cards Grid -->
+        <!-- Forecast Cards Grid with Filters -->
         <div class="mb-5">
             <div class="col-12">
                 <h5 class="fw-bold mb-4">
                     <i class="fas fa-layer-group me-2 text-primary"></i>Forecast Predictions
                 </h5>
+                
+                <!-- Filter and Sort Controls -->
+                <form method="GET" class="row g-3 align-items-end mb-4" id="forecastFilterForm">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label for="productFilter" class="form-label small fw-bold">Filter by Product</label>
+                        <select name="product_id" id="productFilter" class="form-select form-select-sm">
+                            <option value="">All Products</option>
+                            {% for product_id, product_name in all_products %}
+                                <option value="{{ product_id }}" {% if product_id_filter|stringformat:"s" == product_id|stringformat:"s" %}selected{% endif %}>
+                                    {{ product_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 col-md-6 col-lg-2">
+                        <label for="algorithmFilter" class="form-label small fw-bold">Algorithm</label>
+                        <select name="algorithm" id="algorithmFilter" class="form-select form-select-sm">
+                            <option value="">All Algorithms</option>
+                            <option value="xgboost" {% if algorithm_filter == 'xgboost' %}selected{% endif %}>XGBoost</option>
+                            <option value="prophet" {% if algorithm_filter == 'prophet' %}selected{% endif %}>Prophet</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 col-md-6 col-lg-2">
+                        <label for="dateRangeFilter" class="form-label small fw-bold">Date Range</label>
+                        <select name="date_range" id="dateRangeFilter" class="form-select form-select-sm">
+                            <option value="all" {% if date_range_filter == 'all' %}selected{% endif %}>All Dates</option>
+                            <option value="week" {% if date_range_filter == 'week' %}selected{% endif %}>Last 7 Days</option>
+                            <option value="month" {% if date_range_filter == 'month' %}selected{% endif %}>Last 30 Days</option>
+                            <option value="future" {% if date_range_filter == 'future' %}selected{% endif %}>Future Only</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label for="sortByFilter" class="form-label small fw-bold">Sort By</label>
+                        <select name="sort_by" id="sortByFilter" class="form-select form-select-sm">
+                            <option value="-forecast_date" {% if sort_by == '-forecast_date' %}selected{% endif %}>Date (Newest First)</option>
+                            <option value="forecast_date" {% if sort_by == 'forecast_date' %}selected{% endif %}>Date (Oldest First)</option>
+                            <option value="-predicted_quantity" {% if sort_by == '-predicted_quantity' %}selected{% endif %}>Quantity (High to Low)</option>
+                            <option value="predicted_quantity" {% if sort_by == 'predicted_quantity' %}selected{% endif %}>Quantity (Low to High)</option>
+                            <option value="-predicted_revenue" {% if sort_by == '-predicted_revenue' %}selected{% endif %}>Revenue (High to Low)</option>
+                            <option value="predicted_revenue" {% if sort_by == 'predicted_revenue' %}selected{% endif %}>Revenue (Low to High)</option>
+                            <option value="algorithm_used" {% if sort_by == 'algorithm_used' %}selected{% endif %}>Algorithm (A-Z)</option>
+                            <option value="product__name" {% if sort_by == 'product__name' %}selected{% endif %}>Product Name (A-Z)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 col-lg-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-filter me-1"></i>Apply Filters
+                        </button>
+                    </div>
+                </form>
             </div>
             <div style="max-height: 600px; overflow-y: auto; padding-right: 10px;">
                 <div class="row g-4">

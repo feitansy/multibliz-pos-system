@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models
+from django.db.models import Q
 from django.db.models.functions import TruncDate
 from .models import Forecast, ForecastConfig
 from sales.models import Sale
@@ -21,9 +22,46 @@ class ForecastListView(LoginRequiredMixin, ListView):
         today = datetime.now().date()
         seven_days_ago = today - timedelta(days=7)
         
-        return Forecast.objects.select_related('product').filter(
+        queryset = Forecast.objects.select_related('product').filter(
             forecast_date__gte=seven_days_ago
-        ).order_by('-forecast_date', '-created_at')
+        )
+        
+        # Apply product filter
+        product_id = self.request.GET.get('product_id')
+        if product_id:
+            queryset = queryset.filter(product_id=product_id)
+        
+        # Apply algorithm filter
+        algorithm = self.request.GET.get('algorithm')
+        if algorithm and algorithm in ['xgboost', 'prophet']:
+            queryset = queryset.filter(algorithm_used=algorithm)
+        
+        # Apply date range filter
+        date_range = self.request.GET.get('date_range', 'all')
+        if date_range == 'week':
+            start_date = today - timedelta(days=7)
+            queryset = queryset.filter(forecast_date__gte=start_date)
+        elif date_range == 'month':
+            start_date = today - timedelta(days=30)
+            queryset = queryset.filter(forecast_date__gte=start_date)
+        elif date_range == 'future':
+            queryset = queryset.filter(forecast_date__gte=today)
+        
+        # Apply sorting
+        sort_by = self.request.GET.get('sort_by', '-forecast_date')
+        valid_sorts = [
+            '-forecast_date', 'forecast_date',
+            '-predicted_quantity', 'predicted_quantity',
+            '-predicted_revenue', 'predicted_revenue',
+            'algorithm_used', '-algorithm_used',
+            'product__name', '-product__name'
+        ]
+        if sort_by in valid_sorts:
+            queryset = queryset.order_by(sort_by)
+        else:
+            queryset = queryset.order_by('-forecast_date', '-created_at')
+        
+        return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -91,6 +129,17 @@ class ForecastListView(LoginRequiredMixin, ListView):
             
             context['total_projected_revenue'] = total_revenue
             context['total_predicted_units'] = total_units
+            
+            # Get unique products for filter dropdown
+            context['all_products'] = Forecast.objects.values_list(
+                'product_id', 'product__name'
+            ).distinct().order_by('product__name')
+            
+            # Get filter parameters
+            context['product_id_filter'] = self.request.GET.get('product_id', '')
+            context['algorithm_filter'] = self.request.GET.get('algorithm', '')
+            context['date_range_filter'] = self.request.GET.get('date_range', 'all')
+            context['sort_by'] = self.request.GET.get('sort_by', '-forecast_date')
             
             # Add forecast generation status
             try:

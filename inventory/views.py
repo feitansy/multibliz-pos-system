@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q, Sum, F, Value
+from django.db.models.functions import Coalesce
+from datetime import datetime
 from .models import Supplier, Stock
 from .forms import StockForm, SupplierForm
 from .mixins import InventoryListMixin, InventoryDetailMixin, InventoryCreateMixin, InventoryUpdateMixin, InventoryDeleteMixin
@@ -86,3 +89,67 @@ class StockDeleteView(LoginRequiredMixin, InventoryDeleteMixin):
     model = Stock
     template_name = 'inventory/stock_confirm_delete.html'
     success_url = reverse_lazy('stock_list')
+
+class InventoryPrintReportView(LoginRequiredMixin, TemplateView):
+    """
+    Generate printable inventory report
+    Includes all stock levels, status, and reorder information
+    """
+    template_name = 'inventory/stock_print_report.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get all stock with related product and supplier data
+        stocks = Stock.objects.select_related('product', 'supplier').all()
+        
+        # Apply search filter if provided
+        search_query = self.request.GET.get('search', '')
+        if search_query:
+            stocks = stocks.filter(
+                Q(product__name__icontains=search_query) |
+                Q(supplier__name__icontains=search_query)
+            )
+        
+        # Apply stock status filter
+        stock_status = self.request.GET.get('stock_status', '')
+        if stock_status == 'no_stocks':
+            stocks = stocks.filter(quantity=0)
+        elif stock_status == 'critical':
+            stocks = stocks.filter(quantity__lte=F('reorder_level'))
+        elif stock_status == 'warning':
+            stocks = stocks.filter(
+                quantity__gt=F('reorder_level'),
+                quantity__lte=F('reorder_level') + 15
+            )
+        elif stock_status == 'healthy':
+            stocks = stocks.filter(quantity__gt=F('reorder_level') + 15)
+        
+        # Get sorting preference
+        sort_by = self.request.GET.get('sort_by', 'product')
+        if sort_by == 'quantity':
+            stocks = stocks.order_by('quantity')
+        elif sort_by == 'reorder_level':
+            stocks = stocks.order_by('reorder_level')
+        elif sort_by == 'supplier':
+            stocks = stocks.order_by('supplier__name')
+        else:  # Default to product name
+            stocks = stocks.order_by('product__name')
+        
+        # Calculate summary statistics
+        total_items = stocks.count()
+        total_units = stocks.aggregate(total=Coalesce(Sum('quantity'), 0))['total']
+        critical_count = stocks.filter(quantity__lte=F('reorder_level')).count()
+        no_stock_count = stocks.filter(quantity=0).count()
+        
+        context['stocks'] = stocks
+        context['total_items'] = total_items
+        context['total_units'] = total_units
+        context['critical_count'] = critical_count
+        context['no_stock_count'] = no_stock_count
+        context['search_query'] = search_query
+        context['stock_status'] = stock_status
+        context['sort_by'] = sort_by
+        context['generated_date'] = datetime.now()
+        
+        return context

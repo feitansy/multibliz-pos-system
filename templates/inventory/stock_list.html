@@ -9,6 +9,14 @@
             <h1 class="display-5 fw-bold mb-2">Inventory Management</h1>
             <p class="text-muted fs-6">Monitor and manage stock levels</p>
         </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'inventory_print_report' %}" class="btn btn-outline-info" title="Print Report">
+                <i class="fas fa-print me-2"></i>Print Report
+            </a>
+            <a href="{% url 'stock_create' %}" class="btn btn-warning" title="Add Stock">
+                <i class="fas fa-plus me-2"></i>Add Stock
+            </a>
+        </div>
     </div>
 
     {% if object_list %}
