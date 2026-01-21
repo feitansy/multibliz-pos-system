@@ -11,7 +11,7 @@
         </div>
         <div class="text-end">
             <div class="d-flex gap-2 align-items-start justify-content-end mb-2">
-                <a href="{% url 'forecast_print_report' %}{% if product_id_filter %}?product_id={{ product_id_filter }}{% endif %}{% if algorithm_filter %}&algorithm={{ algorithm_filter }}{% endif %}{% if date_range_filter %}&date_range={{ date_range_filter }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}" class="btn btn-sm btn-outline-info" title="Print Report">
+                <a href="{% url 'forecast_print_report' %}{% if product_id_filter or algorithm_filter or date_range_filter != 'all' or sort_by %}?{% if product_id_filter %}product_id={{ product_id_filter }}&{% endif %}{% if algorithm_filter %}algorithm={{ algorithm_filter }}&{% endif %}{% if date_range_filter and date_range_filter != 'all' %}date_range={{ date_range_filter }}&{% endif %}{% if sort_by %}sort_by={{ sort_by }}{% endif %}{% endif %}" class="btn btn-sm btn-outline-info" title="Print Report">
                     <i class="fas fa-print me-1"></i>Print Report
                 </a>
                 <div class="badge bg-success px-3 py-2">
