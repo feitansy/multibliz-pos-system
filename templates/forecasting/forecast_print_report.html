@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forecast Report - Multibliz POS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+            table {
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+            }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+        
+        .company-name {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 10px;
+        }
+        
+        .report-title {
+            font-size: 24px;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .report-date {
+            color: #636e72;
+            font-size: 14px;
+        }
+        
+        .filter-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #636e72;
+        }
+        
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .summary-card.revenue {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .summary-card.xgboost {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .summary-card.prophet {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .summary-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .summary-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        thead {
+            background: #f8f9fa;
+            border-top: 2px solid #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3436;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        .algorithm-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .algorithm-xgboost {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .algorithm-prophet {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .confidence-high {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+        
+        .confidence-medium {
+            background: #fef3c7;
+            color: #b45309;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .print-controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .print-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .print-btn:hover {
+            background: #5568d3;
+        }
+        
+        .quantity-text {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .revenue-text {
+            font-weight: bold;
+            color: #10b981;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .company-name {
+                font-size: 24px;
+            }
+            
+            .report-title {
+                font-size: 18px;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="company-name">MULTIBLIZ POS SYSTEM</div>
+            <div class="report-title">AI-Powered Forecasting Report</div>
+            <div class="report-date">Generated on {{ generated_date|date:"F j, Y \\a\\t H:i" }}</div>
+        </div>
+        
+        {% if product_id_filter or algorithm_filter or date_range_filter != 'all' %}
+        <div class="filter-info">
+            <strong>Filters Applied:</strong>
+            {% if product_id_filter %}<span>Product: {{ product_id_filter }}</span> • {% endif %}
+            {% if algorithm_filter %}<span>Algorithm: {{ algorithm_filter|upper }}</span> • {% endif %}
+            <span>Date Range: {{ date_range_filter|title }}</span>
+        </div>
+        {% endif %}
+        
+        <!-- Summary Cards -->
+        <div class="summary no-print">
+            <div class="summary-card">
+                <div class="summary-label">Total Forecasts</div>
+                <div class="summary-value">{{ total_forecasts }}</div>
+            </div>
+            <div class="summary-card revenue">
+                <div class="summary-label">Predicted Units</div>
+                <div class="summary-value">{{ total_predicted_units }}</div>
+            </div>
+            <div class="summary-card xgboost">
+                <div class="summary-label">XGBoost Forecasts</div>
+                <div class="summary-value">{{ xgboost_count }}</div>
+            </div>
+            <div class="summary-card prophet">
+                <div class="summary-label">Prophet Forecasts</div>
+                <div class="summary-value">{{ prophet_count }}</div>
+            </div>
+        </div>
+        
+        <!-- Print Controls -->
+        <div class="print-controls no-print">
+            <button class="print-btn" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+        </div>
+        
+        <!-- Summary Statistics -->
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <h4 style="margin-bottom: 15px; color: #2d3436;">Key Metrics</h4>
+            <table style="margin-top: 0; border: none;">
+                <tr style="border: none;">
+                    <td style="border: none; padding: 8px 0;"><strong>Total Projected Revenue:</strong></td>
+                    <td style="border: none; padding: 8px 0; text-align: right;" class="revenue-text">₱{{ total_projected_revenue|floatformat:2 }}</td>
+                </tr>
+                <tr style="border: none;">
+                    <td style="border: none; padding: 8px 0;"><strong>Total Predicted Units:</strong></td>
+                    <td style="border: none; padding: 8px 0; text-align: right;" class="quantity-text">{{ total_predicted_units }} units</td>
+                </tr>
+                <tr style="border: none;">
+                    <td style="border: none; padding: 8px 0;"><strong>Average Revenue per Forecast:</strong></td>
+                    <td style="border: none; padding: 8px 0; text-align: right;">
+                        {% if total_forecasts > 0 %}
+                            ₱{{ total_projected_revenue|add:0|div:total_forecasts|floatformat:2 }}
+                        {% else %}
+                            ₱0.00
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- Forecast Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Forecast Date</th>
+                    <th class="text-right">Predicted Units</th>
+                    <th class="text-right">Projected Revenue</th>
+                    <th style="text-align: center;">Algorithm</th>
+                    <th style="text-align: center;">Confidence</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for forecast in forecasts %}
+                <tr>
+                    <td>{{ forecast.product.name }}</td>
+                    <td>{{ forecast.forecast_date|date:"M d, Y" }}</td>
+                    <td class="text-right quantity-text">{{ forecast.predicted_quantity }}</td>
+                    <td class="text-right revenue-text">₱{{ forecast.predicted_revenue|floatformat:2 }}</td>
+                    <td style="text-align: center;">
+                        {% if forecast.algorithm_used == 'xgboost' %}
+                            <span class="algorithm-badge algorithm-xgboost">XGBoost</span>
+                        {% else %}
+                            <span class="algorithm-badge algorithm-prophet">Prophet</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if forecast.algorithm_used == 'xgboost' %}
+                            <span class="confidence-high">High</span>
+                        {% else %}
+                            <span class="confidence-medium">Medium</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 30px; color: #999;">
+                        No forecast records found with the applied filters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            <p>This is an official forecast report from Multibliz POS System AI-Powered Analytics.</p>
+            <p>{{ total_forecasts }} forecasts • {{ xgboost_count }} XGBoost + {{ prophet_count }} Prophet models</p>
+        </div>
+    </div>
+</body>
+</html>

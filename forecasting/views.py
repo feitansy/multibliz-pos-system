@@ -1,8 +1,8 @@
 from django.shortcuts import render
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.db.models.functions import TruncDate
 from .models import Forecast, ForecastConfig
 from sales.models import Sale
@@ -165,3 +165,84 @@ class ForecastListView(LoginRequiredMixin, ListView):
 class ForecastDetailView(LoginRequiredMixin, DetailView):
     model = Forecast
     template_name = 'forecasting/forecast_detail.html'
+
+class ForecastPrintReportView(LoginRequiredMixin, TemplateView):
+    """
+    Generate printable forecast report
+    Includes all forecast predictions with filtering and sorting options
+    """
+    template_name = 'forecasting/forecast_print_report.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = datetime.now().date()
+        seven_days_ago = today - timedelta(days=7)
+        
+        # Get forecasts with related product data
+        forecasts = Forecast.objects.select_related('product').filter(
+            forecast_date__gte=seven_days_ago
+        )
+        
+        # Apply product filter
+        product_id = self.request.GET.get('product_id')
+        if product_id:
+            forecasts = forecasts.filter(product_id=product_id)
+        
+        # Apply algorithm filter
+        algorithm = self.request.GET.get('algorithm')
+        if algorithm and algorithm in ['xgboost', 'prophet']:
+            forecasts = forecasts.filter(algorithm_used=algorithm)
+        
+        # Apply date range filter
+        date_range = self.request.GET.get('date_range', 'all')
+        if date_range == 'week':
+            start_date = today - timedelta(days=7)
+            forecasts = forecasts.filter(forecast_date__gte=start_date)
+        elif date_range == 'month':
+            start_date = today - timedelta(days=30)
+            forecasts = forecasts.filter(forecast_date__gte=start_date)
+        elif date_range == 'future':
+            forecasts = forecasts.filter(forecast_date__gte=today)
+        
+        # Apply sorting
+        sort_by = self.request.GET.get('sort_by', '-forecast_date')
+        valid_sorts = [
+            '-forecast_date', 'forecast_date',
+            '-predicted_quantity', 'predicted_quantity',
+            '-predicted_revenue', 'predicted_revenue',
+            'algorithm_used', '-algorithm_used',
+            'product__name', '-product__name'
+        ]
+        if sort_by in valid_sorts:
+            forecasts = forecasts.order_by(sort_by)
+        else:
+            forecasts = forecasts.order_by('-forecast_date', '-created_at')
+        
+        # Calculate summary statistics
+        total_forecasts = forecasts.count()
+        total_predicted_units = forecasts.aggregate(total=Sum('predicted_quantity'))['total'] or 0
+        total_projected_revenue = forecasts.aggregate(total=Sum('predicted_revenue'))['total'] or 0
+        
+        # Count by algorithm
+        xgboost_count = forecasts.filter(algorithm_used='xgboost').count()
+        prophet_count = forecasts.filter(algorithm_used='prophet').count()
+        
+        # Get unique products for filter dropdown
+        all_products = Forecast.objects.values_list(
+            'product_id', 'product__name'
+        ).distinct().order_by('product__name')
+        
+        context['forecasts'] = forecasts
+        context['total_forecasts'] = total_forecasts
+        context['total_predicted_units'] = total_predicted_units
+        context['total_projected_revenue'] = total_projected_revenue
+        context['xgboost_count'] = xgboost_count
+        context['prophet_count'] = prophet_count
+        context['all_products'] = all_products
+        context['product_id_filter'] = product_id or ''
+        context['algorithm_filter'] = algorithm or ''
+        context['date_range_filter'] = date_range
+        context['sort_by'] = sort_by
+        context['generated_date'] = datetime.now()
+        
+        return context
