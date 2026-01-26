@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.contrib.auth.forms import SetPasswordForm
+from django.views.decorators.http import cache_control
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 
 class SignUpView(CreateView):
@@ -49,6 +50,7 @@ def login_view(request):
     return render(request, 'accounts/login.html', {'form': form})
 
 @login_required
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
 def logout_view(request):
     """
     Custom logout view - terminates the session completely.
@@ -62,6 +64,11 @@ def logout_view(request):
     # Clear any additional cookies/session info
     response = redirect('login')
     response.delete_cookie('sessionid')
+    
+    # Add cache control headers to prevent back button access
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
     
     messages.info(request, 'You have been logged out successfully.')
     return response

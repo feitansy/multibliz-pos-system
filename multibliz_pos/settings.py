@@ -71,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.middleware.NoCacheMiddleware',  # Prevent caching of authenticated pages
     'forecasting.middleware.AutoForecastMiddleware',  # Auto-generate forecasts every 30 days
 ]
 
