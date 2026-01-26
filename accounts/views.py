@@ -51,11 +51,20 @@ def login_view(request):
 @login_required
 def logout_view(request):
     """
-    Custom logout view.
+    Custom logout view - terminates the session completely.
     """
+    # Clear all session data
+    request.session.flush()
+    
+    # Call Django's logout to clear authentication
     logout(request)
+    
+    # Clear any additional cookies/session info
+    response = redirect('login')
+    response.delete_cookie('sessionid')
+    
     messages.info(request, 'You have been logged out successfully.')
-    return redirect('login')
+    return response
 
 
 @login_required

@@ -240,6 +240,18 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
+# ============================================
+# Session Configuration
+# ============================================
+# Session expires when browser closes
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Session cookie age: 24 hours (86400 seconds)
+SESSION_COOKIE_AGE = 86400
+
+# Require session cookie to be present
+SESSION_COOKIE_HTTPONLY = True
+
 # HSTS Settings (only enable after confirming HTTPS works)
 # SECURE_HSTS_SECONDS = 31536000  # 1 year
 # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
