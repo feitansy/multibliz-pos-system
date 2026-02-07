@@ -3,162 +3,428 @@
 {% block title %}Sign Up - Multibliz POS{% endblock %}
 
 {% block content %}
-<div class="auth-container auth-signup">
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <div class="auth-header auth-header-compact">
-                <div class="auth-logo">
-                    <i class="fas fa-rocket"></i>
+<div class="modern-auth-container">
+    <div class="modern-auth-split">
+        <!-- Left Side: Form -->
+        <div class="modern-auth-left">
+            <div class="modern-auth-form-wrapper">
+                <div class="modern-auth-branding">
+                    <h1 class="modern-auth-logo-text">Multibliz</h1>
                 </div>
-                <h2 class="auth-title">Get Started</h2>
-                <p class="auth-subtitle">Create your Multibliz POS account</p>
-            </div>
-            
-            <div class="auth-body auth-body-compact">
-                <form method="post" class="auth-form" novalidate>
-                    {% csrf_token %}
+                
+                <div class="modern-auth-content">
+                    <h2 class="modern-auth-heading">Create your<br><span class="modern-auth-highlight">account</span></h2>
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group form-group-compact">
-                                <label for="{{ form.username.id_for_label }}" class="form-label">
-                                    <i class="fas fa-user me-1"></i>Username *
-                                </label>
-                                {{ form.username }}
-                                {% if form.username.errors %}
-                                    <div class="text-danger small"><i class="fas fa-times-circle me-1"></i>{{ form.username.errors.0 }}</div>
-                                {% endif %}
-                            </div>
+                    <form method="post" class="modern-auth-form" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="modern-form-group">
+                            <label for="{{ form.username.id_for_label }}" class="modern-form-label">Username</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="modern-form-error"><i class="fas fa-times-circle me-1"></i>{{ form.username.errors.0 }}</div>
+                            {% endif %}
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group form-group-compact">
-                                <label for="{{ form.email.id_for_label }}" class="form-label">
-                                    <i class="fas fa-envelope me-1"></i>Email *
-                                </label>
-                                {{ form.email }}
-                                {% if form.email.errors %}
-                                    <div class="text-danger small"><i class="fas fa-times-circle me-1"></i>{{ form.email.errors.0 }}</div>
-                                {% endif %}
-                            </div>
+                        
+                        <div class="modern-form-group">
+                            <label for="{{ form.email.id_for_label }}" class="modern-form-label">Email address</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="modern-form-error"><i class="fas fa-times-circle me-1"></i>{{ form.email.errors.0 }}</div>
+                            {% endif %}
                         </div>
+                        
+                        <div class="modern-form-group">
+                            <label for="{{ form.phone.id_for_label }}" class="modern-form-label">Phone (Optional)</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="modern-form-error"><i class="fas fa-times-circle me-1"></i>{{ form.phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="modern-form-group">
+                            <label for="{{ form.company_name.id_for_label }}" class="modern-form-label">Company Name (Optional)</label>
+                            {{ form.company_name }}
+                            {% if form.company_name.errors %}
+                                <div class="modern-form-error"><i class="fas fa-times-circle me-1"></i>{{ form.company_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="modern-form-group">
+                            <label for="{{ form.address.id_for_label }}" class="modern-form-label">Address (Optional)</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <div class="modern-form-error"><i class="fas fa-times-circle me-1"></i>{{ form.address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="modern-form-group">
+                            <label for="{{ form.password1.id_for_label }}" class="modern-form-label">Password</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                                <div class="modern-form-error"><i class="fas fa-times-circle me-1"></i>{{ form.password1.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="modern-form-group">
+                            <label for="{{ form.password2.id_for_label }}" class="modern-form-label">Confirm Password</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                                <div class="modern-form-error"><i class="fas fa-times-circle me-1"></i>{{ form.password2.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <button type="submit" class="modern-btn-primary" style="width: 100%; margin-top: 20px;">Sign up</button>
+                    </form>
+                    
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="{% url 'login' %}" style="color: #4A90E2; text-decoration: none; font-size: 14px;">Already have an account? Login</a>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group form-group-compact">
-                                <label for="{{ form.phone.id_for_label }}" class="form-label">
-                                    <i class="fas fa-phone me-1"></i>Phone
-                                </label>
-                                {{ form.phone }}
-                                {% if form.phone.errors %}
-                                    <div class="text-danger small"><i class="fas fa-times-circle me-1"></i>{{ form.phone.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group form-group-compact">
-                                <label for="{{ form.company_name.id_for_label }}" class="form-label">
-                                    <i class="fas fa-building me-1"></i>Company
-                                </label>
-                                {{ form.company_name }}
-                                {% if form.company_name.errors %}
-                                    <div class="text-danger small"><i class="fas fa-times-circle me-1"></i>{{ form.company_name.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group form-group-compact">
-                        <label for="{{ form.address.id_for_label }}" class="form-label">
-                            <i class="fas fa-map-marker-alt me-1"></i>Address
-                        </label>
-                        {{ form.address }}
-                        {% if form.address.errors %}
-                            <div class="text-danger small"><i class="fas fa-times-circle me-1"></i>{{ form.address.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group form-group-compact">
-                                <label for="{{ form.password1.id_for_label }}" class="form-label">
-                                    <i class="fas fa-lock me-1"></i>Password *
-                                </label>
-                                {{ form.password1 }}
-                                {% if form.password1.errors %}
-                                    <div class="text-danger small"><i class="fas fa-times-circle me-1"></i>{{ form.password1.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group form-group-compact">
-                                <label for="{{ form.password2.id_for_label }}" class="form-label">
-                                    <i class="fas fa-lock me-1"></i>Confirm *
-                                </label>
-                                {{ form.password2 }}
-                                {% if form.password2.errors %}
-                                    <div class="text-danger small"><i class="fas fa-times-circle me-1"></i>{{ form.password2.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-auth w-100">
-                        <i class="fas fa-user-plus me-2"></i>Create Account
-                    </button>
-                </form>
-
-                <div class="auth-divider">
-                    <span>Already a member?</span>
                 </div>
-
-                <a href="{% url 'login' %}" class="btn btn-outline-primary w-100">
-                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
-                </a>
-
-                <!-- Toast/Popup Notifications -->
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="auth-toast auth-toast-{{ message.tags }} fade-in-out" role="alert">
-                            <div class="toast-content">
-                                {% if message.tags == 'error' %}
-                                    <i class="fas fa-exclamation-circle me-2"></i>
-                                {% elif message.tags == 'success' %}
-                                    <i class="fas fa-check-circle me-2"></i>
-                                {% else %}
-                                    <i class="fas fa-info-circle me-2"></i>
-                                {% endif %}
-                                <span>{{ message }}</span>
-                            </div>
-                            <button type="button" class="toast-close" onclick="this.parentElement.style.display='none';">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-
-                {% if form.non_field_errors %}
-                    <div class="auth-toast auth-toast-error fade-in-out" role="alert">
-                        <div class="toast-content">
-                            <i class="fas fa-times-circle me-2"></i>
-                            <span>
-                                <strong>Sign Up Failed!</strong><br>
-                                {{ form.non_field_errors.0 }}
-                            </span>
-                        </div>
-                        <button type="button" class="toast-close" onclick="this.parentElement.style.display='none';">
-                            <i class="fas fa-times"></i>
-                        </button>
+                
+                <div class="modern-auth-footer">
+                    <span class="modern-footer-label">FOLLOW</span>
+                    <div class="modern-social-links">
+                        <a href="#" class="modern-social-link" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="modern-social-link" title="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="modern-social-link" title="Instagram"><i class="fab fa-instagram"></i></a>
                     </div>
-                {% endif %}
+                </div>
             </div>
         </div>
-
-        <div class="auth-decoration">
-            <div class="decoration-circle decoration-1"></div>
-            <div class="decoration-circle decoration-2"></div>
-            <div class="decoration-circle decoration-3"></div>
+        
+        <!-- Right Side: Gradient Background -->
+        <div class="modern-auth-right">
+            <div class="modern-auth-gradient"></div>
         </div>
     </div>
+    
+    <!-- Messages -->
+    {% if messages %}
+        <div class="modern-messages-container">
+            {% for message in messages %}
+                <div class="modern-message modern-message-{{ message.tags }}" role="alert">
+                    <i class="fas fa-{% if message.tags == 'error' %}times-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="modern-message-close" onclick="this.parentElement.style.display='none';">×</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    {% if form.non_field_errors %}
+        <div class="modern-messages-container">
+            <div class="modern-message modern-message-error" role="alert">
+                <i class="fas fa-times-circle me-2"></i>
+                {{ form.non_field_errors.0 }}
+                <button type="button" class="modern-message-close" onclick="this.parentElement.style.display='none';">×</button>
+            </div>
+        </div>
+    {% endif %}
 </div>
+
+<style>
+.modern-auth-container {
+    min-height: 100vh;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.modern-auth-split {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+.modern-auth-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background: #f8f9fa;
+    overflow-y: auto;
+}
+
+.modern-auth-form-wrapper {
+    width: 100%;
+    max-width: 400px;
+}
+
+.modern-auth-branding {
+    margin-bottom: 40px;
+    text-align: left;
+}
+
+.modern-auth-logo-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #999;
+    letter-spacing: 2px;
+    margin: 0;
+}
+
+.modern-auth-content {
+    margin-bottom: 40px;
+}
+
+.modern-auth-heading {
+    font-size: 36px;
+    font-weight: 300;
+    color: #333;
+    margin: 0 0 30px 0;
+    line-height: 1.2;
+}
+
+.modern-auth-highlight {
+    font-weight: 700;
+    color: #4A90E2;
+}
+
+.modern-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modern-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.modern-form-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.modern-form-group input[type="text"],
+.modern-form-group input[type="email"],
+.modern-form-group input[type="password"],
+.modern-form-group textarea {
+    padding: 12px 0;
+    border: none;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+    color: #333;
+    background: transparent;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.modern-form-group input[type="text"]:focus,
+.modern-form-group input[type="email"]:focus,
+.modern-form-group input[type="password"]:focus,
+.modern-form-group textarea:focus {
+    outline: none;
+    border-bottom-color: #4A90E2;
+}
+
+.modern-form-group input::placeholder {
+    color: #ccc;
+}
+
+.modern-form-error {
+    font-size: 12px;
+    color: #e74c3c;
+    margin-top: 5px;
+}
+
+.modern-btn-primary {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    background: #4A90E2;
+    color: white;
+}
+
+.modern-btn-primary:hover {
+    background: #3a7bc8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.modern-auth-footer {
+    margin-top: 40px;
+    text-align: left;
+}
+
+.modern-footer-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.modern-social-links {
+    display: flex;
+    gap: 15px;
+}
+
+.modern-social-link {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    color: #999;
+    transition: all 0.3s;
+    text-decoration: none;
+}
+
+.modern-social-link:hover {
+    border-color: #4A90E2;
+    color: #4A90E2;
+    background: #f0f5ff;
+}
+
+.modern-auth-right {
+    flex: 1;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-auth-gradient {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    top: -100px;
+    right: -100px;
+    animation: float 6s ease-in-out infinite;
+}
+
+.modern-auth-gradient::before {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    bottom: -150px;
+    left: -150px;
+    animation: float-reverse 8s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(20px, -20px); }
+}
+
+@keyframes float-reverse {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-20px, 20px); }
+}
+
+.modern-messages-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+}
+
+.modern-message {
+    padding: 15px 20px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    animation: slideIn 0.3s ease;
+}
+
+.modern-message-error {
+    background: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+}
+
+.modern-message-success {
+    background: #efe;
+    color: #3c3;
+    border: 1px solid #cfc;
+}
+
+.modern-message-info {
+    background: #eef;
+    color: #33c;
+    border: 1px solid #ccf;
+}
+
+.modern-message-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 0;
+    margin-left: auto;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .modern-auth-split {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .modern-auth-left {
+        flex: none;
+        padding: 40px 20px;
+        min-height: auto;
+    }
+    
+    .modern-auth-right {
+        flex: none;
+        height: 300px;
+    }
+    
+    .modern-auth-heading {
+        font-size: 32px;
+    }
+    
+    .modern-auth-form-wrapper {
+        max-width: 100%;
+    }
+}
+</style>
 {% endblock %}
