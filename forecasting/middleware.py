@@ -5,6 +5,7 @@ Checks on each request if forecasts need to be regenerated (every 30 days).
 import threading
 import logging
 import os
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -13,19 +14,22 @@ class AutoForecastMiddleware:
     """
     Middleware that checks if forecasts need to be regenerated.
     Runs the generation in a background thread to not block requests.
-    Skips during deployment/build processes.
+    Completely disabled during Render deployment/startup to prevent timeouts.
     """
     
     # Class-level flag to prevent multiple simultaneous generations
     _generation_in_progress = False
     _lock = threading.Lock()
     
+    # Disable during Render startup
+    _disabled = bool(os.environ.get('RENDER'))
+    
     def __init__(self, get_response):
         self.get_response = get_response
     
     def __call__(self, request):
-        # Skip during build/deployment process
-        if not os.environ.get('RENDER'):
+        # Skip during deployment or if disabled
+        if not self._disabled:
             # Only check on dashboard or forecast page access
             if request.path in ['/', '/dashboard/', '/forecasting/']:
                 self._check_and_generate_forecasts()

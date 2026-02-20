@@ -12,7 +12,8 @@ services:
     plan: free
     region: oregon
     buildCommand: "./build.sh"
-    startCommand: "gunicorn multibliz_pos.wsgi:application --bind 0.0.0.0:$PORT"
+    startCommand: "gunicorn multibliz_pos.wsgi:application --bind 0.0.0.0:$PORT --timeout 30 --workers 1 --worker-class sync --max-requests 1000"
+    healthCheckPath: /
     envVars:
       - key: DATABASE_URL
         fromDatabase:
