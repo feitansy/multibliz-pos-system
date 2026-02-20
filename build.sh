@@ -2,42 +2,42 @@
 # Exit on error
 set -o errexit
 
-echo "=== Starting Render build process ==="
+# Set timeout for long-running operations (15 minutes max)
+export BUILD_TIMEOUT=900
 
-# Install dependencies (with timeout to prevent hanging)
-echo "Installing dependencies..."
-pip install --no-cache-dir -r requirements.txt
+echo "==> Starting build process..."
+
+# Install dependencies
+echo "==> Installing dependencies..."
+pip install -r requirements.txt --quiet
 
 # Create media directory if it doesn't exist
 mkdir -p media/products
 
-# Collect static files (with noinput and minimal processing)
-echo "Collecting static files..."
-python manage.py collectstatic --noinput --clear --no-input 2>/dev/null || echo "Static files warning - continuing..."
+# Collect static files
+echo "==> Collecting static files..."
+python manage.py collectstatic --noinput --clear --quiet
 
 # Run migrations
-echo "Running migrations..."
+echo "==> Running database migrations..."
 python manage.py migrate --noinput
 
 # Fix database sequences (if using PostgreSQL on Render)
-echo "Fixing database sequences..."
-python manage.py fix_db_sequences 2>/dev/null || echo "Sequence fix skipped"
+echo "==> Fixing database sequences..."
+python manage.py fix_db_sequences
 
 # Create default admin user
-echo "Creating default admin user..."
+echo "==> Creating default admin user..."
 python manage.py create_default_admin
 
-# Import enhanced data (only if file exists and database is empty)
+# Import enhanced data (77 products + 1496 sales with historical data for forecasting)
 if [ -f "data_enhanced.json" ]; then
-    echo "Checking if data needs to be imported..."
-    python manage.py import_data --file=data_enhanced.json || echo "Data import skipped (may already exist)"
+    echo "==> Importing data (this may take a few minutes)..."
+    python manage.py import_data --file=data_enhanced.json
     
-    # Fix sequences again after import
-    echo "Fixing sequences after import..."
-    python manage.py fix_db_sequences 2>/dev/null || echo "Post-import sequence fix skipped"
-else
-    echo "No data file found - skipping import"
+    # Fix sequences again after import (in case IDs got corrupted)
+    echo "==> Fixing sequences after import..."
+    python manage.py fix_db_sequences
 fi
 
-echo "=== Build process completed successfully ==="
-echo "Forecast generation is on-demand. Access /forecasting/ to trigger manually."
+echo "==> Build complete! Forecast generation will run automatically on first dashboard access."
