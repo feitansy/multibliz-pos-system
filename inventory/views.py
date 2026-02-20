@@ -9,6 +9,7 @@ from datetime import datetime
 from .models import Supplier, Stock
 from .forms import StockForm, SupplierForm
 from .mixins import InventoryListMixin, InventoryDetailMixin, InventoryCreateMixin, InventoryUpdateMixin, InventoryDeleteMixin
+from audit.utils import log_action
 
 class SupplierListView(LoginRequiredMixin, InventoryListMixin):
     model = Supplier
@@ -65,6 +66,7 @@ class StockCreateView(LoginRequiredMixin, CreateView):
         # Check if stock already exists for this product
         try:
             existing_stock = Stock.objects.get(product=product)
+            old_quantity = existing_stock.quantity
             # Update existing stock - ADD the new quantity to existing
             existing_stock.quantity += quantity
             if supplier:
@@ -72,12 +74,40 @@ class StockCreateView(LoginRequiredMixin, CreateView):
             if reorder_level:
                 existing_stock.reorder_level = reorder_level
             existing_stock.save()
+            
+            # Audit log
+            log_action(
+                self.request, 'UPDATE', existing_stock,
+                object_name=f'Stock: {product.name}',
+                description=f'Restocked "{product.name}" — Added {quantity} units (was {old_quantity}, now {existing_stock.quantity})',
+                changes={
+                    'Quantity': {'old': str(old_quantity), 'new': str(existing_stock.quantity)},
+                    'Units Added': {'old': '—', 'new': str(quantity)},
+                    'Supplier': {'old': '—', 'new': str(supplier) if supplier else 'N/A'},
+                }
+            )
+            
             messages.success(self.request, f"Added {quantity} units to {product.name}. New total: {existing_stock.quantity} units.")
             return redirect(self.success_url)
         except Stock.DoesNotExist:
             # Create new stock record
+            response = super().form_valid(form)
+            
+            # Audit log
+            log_action(
+                self.request, 'CREATE', self.object,
+                object_name=f'Stock: {product.name}',
+                description=f'Created stock record for "{product.name}" with {quantity} units',
+                changes={
+                    'Product': {'old': '—', 'new': str(product.name)},
+                    'Quantity': {'old': '—', 'new': str(quantity)},
+                    'Supplier': {'old': '—', 'new': str(supplier) if supplier else 'N/A'},
+                    'Reorder Level': {'old': '—', 'new': str(reorder_level) if reorder_level else 'N/A'},
+                }
+            )
+            
             messages.success(self.request, f"Stock record created for {product.name} with {quantity} units.")
-            return super().form_valid(form)
+            return response
 
 class StockUpdateView(LoginRequiredMixin, InventoryUpdateMixin):
     model = Stock

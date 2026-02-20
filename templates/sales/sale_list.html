@@ -7,17 +7,88 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <style>
-    /* Sales ID column alignment */
-    #saleTable th[data-column="id"],
-    #saleTable td[data-column="id"] {
-        width: 80px;
-        text-align: center;
+    /* Table fits within content area at 100% zoom (sidebar=240px, padding=48px → ~1078px available) */
+    #saleTable {
+        table-layout: fixed;
+        width: 100%;
+        min-width: 940px;
+        font-size: 0.78rem;
+    }
+
+    #saleTable th {
+        position: relative;
+        white-space: nowrap !important;
+        font-size: 0.68rem;
+        letter-spacing: 0.04em;
+        padding: 0.65rem 20px 0.65rem 0.5rem !important;  /* right pad = room for icon */
         vertical-align: middle;
     }
-    
-    #saleTable td[data-column="id"] .badge {
-        display: inline-block;
+
+    /* Pull sort arrow out of text flow so it never widens the column */
+    #saleTable th .sort-indicator {
+        position: absolute;
+        right: 4px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.6rem;
+        opacity: 0.5;
+        line-height: 1;
     }
+
+    #saleTable td {
+        padding: 0.6rem 0.5rem !important;
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Column widths — total ≈ 940px */
+    #saleTable th[data-column="id"],
+    #saleTable td[data-column="id"]       { width: 58px;  text-align: center; }
+
+    #saleTable th[data-column="product"],
+    #saleTable td[data-column="product"]  { width: 210px; text-align: left; max-width: 0; }
+
+    #saleTable th[data-column="quantity"],
+    #saleTable td[data-column="quantity"] { width: 68px;  text-align: center; }
+
+    #saleTable th[data-column="total"],
+    #saleTable td[data-column="total"]    { width: 88px;  text-align: right; }
+
+    #saleTable th[data-column="returned"],
+    #saleTable td[data-column="returned"] { width: 82px;  text-align: center; }
+
+    #saleTable th[data-column="payment"],
+    #saleTable td[data-column="payment"]  { width: 82px;  text-align: center; }
+
+    #saleTable th[data-column="date"],
+    #saleTable td[data-column="date"]     { width: 92px;  text-align: center; font-size: 0.7rem; line-height: 1.3; }
+
+    #saleTable th[data-column="customer"],
+    #saleTable td[data-column="customer"] { width: 95px;  text-align: left; max-width: 0; }
+
+    #saleTable th[data-column="status"],
+    #saleTable td[data-column="status"]   { width: 100px; text-align: center; }
+
+    #saleTable th[data-column="actions"],
+    #saleTable td[data-column="actions"]  { width: 52px;  text-align: center; }
+
+    /* Truncate product & customer */
+    #saleTable td[data-column="product"] strong,
+    #saleTable td[data-column="customer"] {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.78rem;
+    }
+
+    /* Compact inner elements */
+    #saleTable .badge            { font-size: 0.65rem; padding: 0.25em 0.45em; }
+    #saleTable .btn-sm           { padding: 0.18rem 0.35rem; font-size: 0.68rem; }
+    #saleTable .status-badge     { font-size: 0.65rem; padding: 0.25rem 0.45rem; }
+    #saleTable .status-indicator-dot { width: 7px; height: 7px; }
 </style>
 {% endblock %}
 
@@ -154,10 +225,10 @@
                     <table class="table table-hover mb-0" id="saleTable" data-sortable="true">
                         <thead>
                             <tr>
-                                <th data-column="id" data-sortable="true">Sales ID</th>
+                                <th data-column="id" data-sortable="true">ID</th>
                                 <th data-column="product" data-sortable="true">Product</th>
-                                <th data-column="quantity" data-sortable="true">Quantity</th>
-                                <th data-column="total" data-sortable="true">Total Price</th>
+                                <th data-column="quantity" data-sortable="true">Qty</th>
+                                <th data-column="total" data-sortable="true">Total</th>
                                 <th data-column="returned" data-sortable="true">Returned</th>
                                 <th data-column="payment" data-sortable="true">Payment</th>
                                 <th data-column="date" data-sortable="true">Date</th>
@@ -172,7 +243,7 @@
                                     <td data-column="id" class="fw-bold">
                                         <span class="badge bg-primary">{{ sale.id }}</span>
                                     </td>
-                                    <td data-column="product">
+                                    <td data-column="product" title="{{ sale.product.name }}">
                                         <span class="status-indicator-dot {% if sale.has_approved_return %}status-warning{% else %}status-healthy{% endif %}"></span>
                                         <strong>{{ sale.product.name }}</strong>
                                     </td>

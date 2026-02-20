@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.contrib.auth.forms import SetPasswordForm
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from audit.utils import log_action
 
 class SignUpView(CreateView):
     """
@@ -20,6 +21,16 @@ class SignUpView(CreateView):
 
     def form_valid(self, form):
         user = form.save()
+        
+        # Audit log for new account creation
+        from audit.models import AuditLog
+        AuditLog.objects.create(
+            user=user,
+            action='CREATE',
+            object_name=f'User: {user.username}',
+            description=f'New account registered — Username: {user.username}, Email: {user.email or "N/A"}',
+        )
+        
         messages.success(self.request, 'Account created successfully! Please log in.')
         return super().form_valid(form)
 
@@ -126,6 +137,13 @@ def change_password(request):
         form = SetPasswordForm(user=request.user, data=request.POST)
         if form.is_valid():
             form.save()
+            
+            log_action(
+                request, 'UPDATE', request.user,
+                object_name=f'User: {request.user.username}',
+                description=f'Changed own password',
+            )
+            
             messages.success(request, 'Your password has been changed successfully!')
             return redirect('account_settings')
         else:
@@ -223,6 +241,17 @@ def edit_profile(request):
     """
     if request.method == 'POST':
         user = request.user
+        
+        # Capture old values for audit
+        old_values = {
+            'First Name': user.first_name or '—',
+            'Last Name': user.last_name or '—',
+            'Email': user.email or '—',
+            'Phone': user.phone or '—',
+            'Address': user.address or '—',
+            'Company': user.company_name or '—',
+        }
+        
         user.first_name = request.POST.get('first_name', user.first_name)
         user.last_name = request.POST.get('last_name', user.last_name)
         user.email = request.POST.get('email', user.email)
@@ -232,6 +261,29 @@ def edit_profile(request):
         
         try:
             user.save()
+            
+            # Build changes dict
+            new_values = {
+                'First Name': user.first_name or '—',
+                'Last Name': user.last_name or '—',
+                'Email': user.email or '—',
+                'Phone': user.phone or '—',
+                'Address': user.address or '—',
+                'Company': user.company_name or '—',
+            }
+            changes = {}
+            for key in old_values:
+                if old_values[key] != new_values[key]:
+                    changes[key] = {'old': old_values[key], 'new': new_values[key]}
+            
+            changed_fields = ', '.join(changes.keys()) if changes else 'No fields'
+            log_action(
+                request, 'UPDATE', user,
+                object_name=f'User Profile: {user.username}',
+                description=f'Updated own profile — Changed: {changed_fields}',
+                changes=changes,
+            )
+            
             messages.success(request, 'Your profile has been updated successfully!')
             return redirect('account_settings')
         except Exception as e:
@@ -325,6 +377,13 @@ def update_user_role(request, user_id):
             user_to_update.is_staff = False
         
         user_to_update.save()
+        
+        log_action(
+            request, 'UPDATE', user_to_update,
+            object_name=f'User: {user_to_update.username}',
+            description=f'Changed role of user "{user_to_update.username}" from {"Admin" if new_role != "admin" else "Staff"} to {new_role.upper()}',
+            changes={'Role': {'old': 'Admin' if new_role != 'admin' else 'Staff', 'new': new_role.upper()}}
+        )
         
         messages.success(request, f'User "{user_to_update.username}" role updated to {new_role.upper()}')
         return JsonResponse({
@@ -599,6 +658,15 @@ def reset_password(request):
             user.set_password(new_password)
             user.save()
             
+            # Audit log for password reset (no request.user since they're logged out)
+            from audit.models import AuditLog
+            AuditLog.objects.create(
+                user=user,
+                action='UPDATE',
+                object_name=f'User: {user.username}',
+                description=f'Reset password via OTP verification',
+            )
+            
             # Clear session data
             request.session.pop('reset_user_id', None)
             request.session.pop('otp_verified', None)
@@ -641,6 +709,20 @@ def delete_user(request, user_id):
                 return JsonResponse({'success': False, 'error': 'Cannot delete the last admin user'})
         
         username = user_to_delete.username
+        user_email = user_to_delete.email
+        was_admin = user_to_delete.is_staff
+        
+        log_action(
+            request, 'DELETE',
+            object_name=f'User: {username}',
+            description=f'Deleted user "{username}" (email: {user_email or "N/A"}, role: {"Admin" if was_admin else "Staff"})',
+            changes={
+                'Username': {'old': username, 'new': '—'},
+                'Email': {'old': user_email or 'N/A', 'new': '—'},
+                'Role': {'old': 'Admin' if was_admin else 'Staff', 'new': '—'},
+            }
+        )
+        
         user_to_delete.delete()
         
         messages.success(request, f'User "{username}" has been deleted successfully.')

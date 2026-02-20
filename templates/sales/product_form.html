@@ -110,13 +110,18 @@
                                 <i class="fas fa-barcode text-secondary"></i>Receipt Label/SKU
                                 <span class="text-muted small">(Optional)</span>
                             </label>
-                            {{ form.label }}
+                            <div class="input-group">
+                                {{ form.label }}
+                                <button type="button" class="btn btn-outline-secondary" id="generateSkuBtn" title="Generate unique SKU">
+                                    <i class="fas fa-magic me-1"></i>Generate
+                                </button>
+                            </div>
                             {% if form.label.errors %}
                                 <div class="invalid-feedback d-block">
                                     <i class="fas fa-exclamation-circle"></i>{{ form.label.errors.0 }}
                                 </div>
                             {% else %}
-                                <small class="form-text">Receipt label/SKU (optional)</small>
+                                <small class="form-text">Receipt label/SKU (optional) — or auto-generate one</small>
                             {% endif %}
                         </div>
                         {% endif %}
@@ -225,6 +230,42 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         form.classList.add('was-validated');
     });
+
+    // SKU Generator
+    const generateBtn = document.getElementById('generateSkuBtn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function() {
+            const nameInput = form.querySelector('input[name="name"]');
+            const labelInput = form.querySelector('input[name="label"]');
+            if (!labelInput) return;
+
+            // Build prefix from product name (first 3 letters, uppercase)
+            const name = nameInput ? nameInput.value.trim() : '';
+            const prefix = name.length > 0
+                ? name.replace(/[^A-Za-z0-9]/g, '').substring(0, 3).toUpperCase()
+                : 'SKU';
+
+            // Random alphanumeric suffix
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let suffix = '';
+            for (let i = 0; i < 6; i++) {
+                suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            const timestamp = Date.now().toString().slice(-4);
+            labelInput.value = `${prefix}-${suffix}-${timestamp}`;
+            labelInput.classList.remove('is-invalid');
+            labelInput.classList.add('is-valid');
+
+            // Brief visual feedback on the button
+            generateBtn.innerHTML = '<i class="fas fa-check me-1"></i>Generated!';
+            generateBtn.classList.replace('btn-outline-secondary', 'btn-success');
+            setTimeout(() => {
+                generateBtn.innerHTML = '<i class="fas fa-magic me-1"></i>Generate';
+                generateBtn.classList.replace('btn-success', 'btn-outline-secondary');
+            }, 1500);
+        });
+    }
 });
 </script>
 {% endblock %}

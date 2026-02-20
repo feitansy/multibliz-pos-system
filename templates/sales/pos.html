@@ -232,27 +232,31 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1.25rem 1.5rem;
+        padding: 0.75rem 1.25rem;
         background: white;
         border-bottom: 1px solid #e5e7eb;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
 
     .pos-header h1 {
-        font-size: 2rem;
+        font-size: 1.35rem;
         font-weight: 700;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0;
         color: #1f2937;
+    }
+
+    .pos-header p {
+        display: none;
     }
 
     .pos-header-right {
         display: flex;
-        gap: 2rem;
+        gap: 1.25rem;
         align-items: center;
     }
 
     .pos-time {
-        font-size: 2.25rem;
+        font-size: 1.5rem;
         font-weight: 600;
         font-family: 'Monaco', 'Menlo', monospace;
         color: #2563eb;
@@ -261,9 +265,9 @@
     /* Main Layout */
     .pos-layout {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.25rem;
-        padding: 1.25rem;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 1rem;
+        padding: 1rem;
         flex: 1;
         overflow: hidden;
         min-height: 0;
@@ -280,7 +284,7 @@
     }
 
     .pos-panel-header {
-        padding: 1rem 1.5rem;
+        padding: 0.65rem 1rem;
         background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
         border-bottom: 1px solid #d1d5db;
         display: flex;
@@ -291,7 +295,7 @@
 
     .pos-panel-header h5 {
         margin: 0;
-        font-size: 1.15rem;
+        font-size: 1rem;
         font-weight: 600;
         color: #1f2937;
     }
@@ -306,7 +310,7 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        padding: 1.5rem;
+        padding: 1rem;
         overflow: hidden;
     }
 
@@ -377,26 +381,26 @@
     /* Products Grid */
     .pos-products-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+        gap: 0.75rem;
         flex: 1;
         overflow-y: auto;
-        padding-right: 0.5rem;
+        padding-right: 0.25rem;
     }
 
     .pos-product-card {
         display: flex;
         flex-direction: column;
-        padding: 1rem 0.75rem 1.25rem 0.75rem;
+        padding: 0.75rem 0.6rem 0.85rem 0.6rem;
         background: linear-gradient(135deg, #f9fafb, #f3f4f6);
         border: 2px solid #e5e7eb;
-        border-radius: 0.75rem;
+        border-radius: 0.65rem;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.25s ease;
         text-align: center;
         position: relative;
-        min-height: 140px;
-        max-height: 180px;
+        min-height: 120px;
+        max-height: 165px;
         justify-content: space-between;
         overflow: hidden;
     }
@@ -409,16 +413,16 @@
     }
 
     .pos-product-price {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         font-weight: 800;
         color: #10b981;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.35rem;
         flex-shrink: 0;
-        padding-top: 0.25rem;
+        padding-top: 0.15rem;
     }
 
     .pos-product-name {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
         color: #1f2937;
         word-break: break-word;
@@ -1139,23 +1143,23 @@
     /* Extra Large Devices (> 1024px) - Default styling */
     @media (min-width: 1025px) {
         .pos-layout {
-            grid-template-columns: 1fr 1fr;
-            gap: 1.25rem;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 1rem;
         }
 
         .pos-products-grid {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         }
     }
 
     /* Desktop - Large screens (> 1400px) */
     @media (min-width: 1400px) {
         .pos-layout {
-            grid-template-columns: 1.2fr 1fr;
+            grid-template-columns: 1.5fr 1fr;
         }
 
         .pos-products-grid {
-            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
         }
     }
 

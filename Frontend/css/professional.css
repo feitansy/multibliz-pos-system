@@ -583,7 +583,8 @@ h4 {
 /* Responsive Table Wrapper */
 .table-responsive {
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table-responsive table {

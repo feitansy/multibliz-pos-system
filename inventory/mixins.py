@@ -1,5 +1,6 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
+from audit.utils import log_action, get_model_changes
 
 class InventoryMixin:
     model = None
@@ -68,15 +69,54 @@ class InventoryDetailMixin(InventoryMixin, DetailView):
 
 class InventoryCreateMixin(InventoryMixin, CreateView):
     def form_valid(self, form):
+        response = super().form_valid(form)
+        
+        # Audit log
+        obj = self.object
+        model_name = self.model._meta.verbose_name.title()
+        log_action(
+            self.request, 'CREATE', obj,
+            object_name=f'{model_name}: {obj}',
+            description=f'Created {model_name.lower()} "{obj}"',
+            changes={field.replace('_', ' ').title(): {'old': '—', 'new': str(form.cleaned_data.get(field, ''))} for field in form.changed_data}
+        )
+        
         messages.success(self.request, f"{self.model._meta.verbose_name} created successfully.")
-        return super().form_valid(form)
+        return response
 
 class InventoryUpdateMixin(InventoryMixin, UpdateView):
     def form_valid(self, form):
+        # Capture changes before saving
+        changes = get_model_changes(self.object, form)
+        old_name = str(self.object)
+        model_name = self.model._meta.verbose_name.title()
+        
+        response = super().form_valid(form)
+        
+        # Audit log
+        changed_fields = ', '.join(changes.keys()) if changes else 'No fields'
+        log_action(
+            self.request, 'UPDATE', self.object,
+            object_name=f'{model_name}: {self.object}',
+            description=f'Updated {model_name.lower()} "{old_name}" — Changed: {changed_fields}',
+            changes=changes,
+        )
+        
         messages.success(self.request, f"{self.model._meta.verbose_name} updated successfully.")
-        return super().form_valid(form)
+        return response
 
 class InventoryDeleteMixin(InventoryMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        model_name = self.model._meta.verbose_name.title()
+        obj_name = str(obj)
+        
+        # Audit log before deletion
+        log_action(
+            request, 'DELETE', obj,
+            object_name=f'{model_name}: {obj_name}',
+            description=f'Deleted {model_name.lower()} "{obj_name}"',
+        )
+        
         messages.success(self.request, f"{self.model._meta.verbose_name} deleted successfully.")
         return super().delete(request, *args, **kwargs)

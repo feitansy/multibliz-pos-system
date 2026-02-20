@@ -13,6 +13,7 @@ from .forms import ProductForm, SaleForm, ReturnForm
 from .mixins import ProductListMixin, ProductDetailMixin, ProductCreateMixin, ProductUpdateMixin, ProductDeleteMixin
 from django.db.models import Q
 from django.utils import timezone
+from audit.utils import log_action
 
 class ProductListView(LoginRequiredMixin, ProductListMixin):
     model = Product
@@ -177,8 +178,21 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('sale_list')
 
     def form_valid(self, form):
+        response = super().form_valid(form)
+        sale = self.object
+        log_action(
+            self.request, 'CREATE', sale,
+            object_name=f'Sale #{sale.id}',
+            description=f'Created sale #{sale.id} — {sale.product.name} x{sale.quantity} for ₱{sale.total_price} to "{sale.customer_name or "Walk-in"}"',
+            changes={
+                'Product': {'old': '—', 'new': str(sale.product.name)},
+                'Quantity': {'old': '—', 'new': str(sale.quantity)},
+                'Total Price': {'old': '—', 'new': f'₱{sale.total_price}'},
+                'Customer': {'old': '—', 'new': sale.customer_name or 'Walk-in'},
+            }
+        )
         messages.success(self.request, "Sale created successfully.")
-        return super().form_valid(form)
+        return response
 
 class SaleUpdateView(LoginRequiredMixin, UpdateView):
     model = Sale
@@ -187,8 +201,29 @@ class SaleUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('sale_list')
 
     def form_valid(self, form):
+        old_qty = self.object.quantity
+        old_total = self.object.total_price
+        old_customer = self.object.customer_name
+        
+        response = super().form_valid(form)
+        sale = self.object
+        
+        changes = {}
+        if old_qty != sale.quantity:
+            changes['Quantity'] = {'old': str(old_qty), 'new': str(sale.quantity)}
+        if old_total != sale.total_price:
+            changes['Total Price'] = {'old': f'₱{old_total}', 'new': f'₱{sale.total_price}'}
+        if old_customer != sale.customer_name:
+            changes['Customer'] = {'old': old_customer or 'Walk-in', 'new': sale.customer_name or 'Walk-in'}
+        
+        log_action(
+            self.request, 'UPDATE', sale,
+            object_name=f'Sale #{sale.id}',
+            description=f'Updated sale #{sale.id} — {sale.product.name}, changed: {", ".join(changes.keys()) if changes else "details"}',
+            changes=changes,
+        )
         messages.success(self.request, "Sale updated successfully.")
-        return super().form_valid(form)
+        return response
 
 
 class POSView(LoginRequiredMixin, TemplateView):
@@ -404,6 +439,21 @@ def process_transaction(request):
         
         print(f"Transaction success: {response_data}", file=sys.stderr)
         
+        # Audit log for POS transaction
+        if request.user.is_authenticated:
+            items_summary = '; '.join([f'{s["product"]} x{s["quantity"]}' for s in created_sales])
+            log_action(
+                request, 'CREATE',
+                object_name=f'POS Transaction #{created_sales[0]["id"] if created_sales else "N/A"}',
+                description=f'POS sale — {len(created_sales)} item(s) totaling ₱{total_amount:.2f} | Items: {items_summary} | Customer: {customer_name or "Walk-in"} | Payment: {payment_method}',
+                changes={
+                    'Items': {'old': '—', 'new': items_summary},
+                    'Total Amount': {'old': '—', 'new': f'₱{total_amount:.2f}'},
+                    'Payment Method': {'old': '—', 'new': payment_method.title()},
+                    'Customer': {'old': '—', 'new': customer_name or 'Walk-in'},
+                }
+            )
+        
         return JsonResponse(response_data)
         
     except json.JSONDecodeError as e:
@@ -597,8 +647,24 @@ class ReturnCreateView(LoginRequiredMixin, CreateView):
         
         # Set processed_by to current user
         form.instance.processed_by = self.request.user.username
+        response = super().form_valid(form)
+        
+        ret = self.object
+        log_action(
+            self.request, 'CREATE', ret,
+            object_name=f'Return #{ret.id} (Sale #{ret.sale.id})',
+            description=f'Created return request for Sale #{ret.sale.id} — Product: {ret.sale.product.name}, Qty: {ret.quantity}, Reason: {ret.reason or "N/A"}, Refund: ₱{ret.refund_amount or 0}',
+            changes={
+                'Sale': {'old': '—', 'new': f'#{ret.sale.id} - {ret.sale.product.name}'},
+                'Quantity Returned': {'old': '—', 'new': str(ret.quantity)},
+                'Reason': {'old': '—', 'new': str(ret.reason or 'N/A')},
+                'Refund Amount': {'old': '—', 'new': f'₱{ret.refund_amount or 0}'},
+                'Status': {'old': '—', 'new': 'Pending'},
+            }
+        )
+        
         messages.success(self.request, "Return request created successfully.")
-        return super().form_valid(form)
+        return response
 
 
 class ReturnUpdateView(LoginRequiredMixin, UpdateView):
@@ -616,11 +682,25 @@ class ReturnUpdateView(LoginRequiredMixin, UpdateView):
     
     def form_valid(self, form):
         # Update processed date when status changes
+        old_status = self.object.status
+        
         if 'status' in form.changed_data:
             form.instance.processed_date = timezone.now()
             form.instance.processed_by = self.request.user.username
             
             new_status = form.cleaned_data.get('status')
+            
+            # Audit log
+            log_action(
+                self.request, 'UPDATE', self.object,
+                object_name=f'Return #{self.object.id} (Sale #{self.object.sale.id})',
+                description=f'Updated return #{self.object.id} status: {old_status.upper()} → {new_status.upper()} — Product: {self.object.sale.product.name}, Refund: ₱{self.object.refund_amount or 0}',
+                changes={
+                    'Status': {'old': old_status.upper(), 'new': new_status.upper()},
+                    'Processed By': {'old': '—', 'new': self.request.user.username},
+                }
+            )
+            
             if new_status == 'rejected':
                 messages.warning(self.request, f"Return #{self.object.id} has been REJECTED.")
             elif new_status == 'completed':

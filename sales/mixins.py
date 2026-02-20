@@ -3,6 +3,7 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 from django.db import models, transaction
 from inventory.models import Stock
+from audit.utils import log_action, get_model_changes
 
 class ProductMixin:
     model = None  # To be set in subclasses
@@ -104,6 +105,19 @@ class ProductCreateMixin(ProductMixin, CreateView):
                         # Stock should be auto-created by signal, but just in case
                         Stock.objects.create(product=self.object, supplier=supplier)
                 
+                # Audit log
+                log_action(
+                    self.request, 'CREATE', self.object,
+                    object_name=f'Product: {self.object.name}',
+                    description=f'Created product "{self.object.name}" — Category: {getattr(self.object, "category", "N/A")}, Price: ₱{self.object.price}',
+                    changes={
+                        'Name': {'old': '—', 'new': str(self.object.name)},
+                        'Price': {'old': '—', 'new': str(self.object.price)},
+                        'Category': {'old': '—', 'new': str(getattr(self.object, 'category', 'N/A'))},
+                        'Supplier': {'old': '—', 'new': str(supplier) if supplier else 'N/A'},
+                    }
+                )
+                
                 messages.success(self.request, f"{self.model._meta.verbose_name} created successfully.")
                 return response
         except Exception as e:
@@ -127,6 +141,10 @@ class ProductUpdateMixin(ProductMixin, UpdateView):
         return initial
     
     def form_valid(self, form):
+        # Capture changes before saving
+        changes = get_model_changes(self.object, form)
+        old_name = self.object.name
+        
         response = super().form_valid(form)
         
         # Update stock record with the supplier
@@ -138,10 +156,36 @@ class ProductUpdateMixin(ProductMixin, UpdateView):
         except Stock.DoesNotExist:
             Stock.objects.create(product=self.object, supplier=supplier)
         
+        # Audit log
+        changed_fields = ', '.join(changes.keys()) if changes else 'No fields'
+        log_action(
+            self.request, 'UPDATE', self.object,
+            object_name=f'Product: {self.object.name}',
+            description=f'Updated product "{old_name}" — Changed: {changed_fields}',
+            changes=changes,
+        )
+        
         messages.success(self.request, f"{self.model._meta.verbose_name} updated successfully.")
         return response
 
 class ProductDeleteMixin(ProductMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        product_name = str(obj.name)
+        product_price = str(obj.price)
+        product_category = str(getattr(obj, 'category', 'N/A'))
+        
+        # Audit log before deletion
+        log_action(
+            request, 'DELETE', obj,
+            object_name=f'Product: {product_name}',
+            description=f'Deleted product "{product_name}" — Category: {product_category}, Price: ₱{product_price}',
+            changes={
+                'Name': {'old': product_name, 'new': '—'},
+                'Price': {'old': product_price, 'new': '—'},
+                'Category': {'old': product_category, 'new': '—'},
+            }
+        )
+        
         messages.success(self.request, f"{self.model._meta.verbose_name} deleted successfully.")
         return super().delete(request, *args, **kwargs)
