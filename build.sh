@@ -16,7 +16,7 @@ mkdir -p media/products
 
 # Collect static files
 echo "==> Collecting static files..."
-python manage.py collectstatic --noinput --clear --quiet
+python manage.py collectstatic --noinput --clear -v 0
 
 # Run migrations
 echo "==> Running database migrations..."
