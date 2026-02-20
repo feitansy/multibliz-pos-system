@@ -308,6 +308,7 @@ def get_sale_details(request, sale_id):
             'sale': {
                 'id': sale.id,
                 'product_name': sale.product.name,
+                'product_sku': sale.product.label,
                 'quantity': sale.quantity,
                 'unit_price': round(unit_price, 2),
                 'total_price': float(sale.total_price),
