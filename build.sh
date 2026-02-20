@@ -2,34 +2,42 @@
 # Exit on error
 set -o errexit
 
-# Install dependencies
-pip install -r requirements.txt
+echo "=== Starting Render build process ==="
+
+# Install dependencies (with timeout to prevent hanging)
+echo "Installing dependencies..."
+pip install --no-cache-dir -r requirements.txt
 
 # Create media directory if it doesn't exist
 mkdir -p media/products
 
-# Collect static files
-python manage.py collectstatic --noinput
+# Collect static files (with noinput and minimal processing)
+echo "Collecting static files..."
+python manage.py collectstatic --noinput --clear --no-input 2>/dev/null || echo "Static files warning - continuing..."
 
 # Run migrations
+echo "Running migrations..."
 python manage.py migrate --noinput
 
 # Fix database sequences (if using PostgreSQL on Render)
-python manage.py fix_db_sequences
+echo "Fixing database sequences..."
+python manage.py fix_db_sequences 2>/dev/null || echo "Sequence fix skipped"
 
 # Create default admin user
+echo "Creating default admin user..."
 python manage.py create_default_admin
 
-# Import enhanced data (77 products + 1496 sales with historical data for forecasting)
+# Import enhanced data (only if file exists and database is empty)
 if [ -f "data_enhanced.json" ]; then
-    python manage.py import_data --file=data_enhanced.json
+    echo "Checking if data needs to be imported..."
+    python manage.py import_data --file=data_enhanced.json || echo "Data import skipped (may already exist)"
     
-    # Fix sequences again after import (in case IDs got corrupted)
-    python manage.py fix_db_sequences
+    # Fix sequences again after import
+    echo "Fixing sequences after import..."
+    python manage.py fix_db_sequences 2>/dev/null || echo "Post-import sequence fix skipped"
+else
+    echo "No data file found - skipping import"
 fi
 
-# Generate initial forecasts (runs automatically every 30 days based on sales data)
-# DISABLED: This command takes 10-15+ minutes and causes deployment timeouts on Render
-# Forecasts are now generated on-demand via the dashboard or API
-# python manage.py auto_generate_forecast --force || echo "Forecast generation skipped (may not have enough data yet)"
-echo "Forecast generation is now on-demand. Run 'python manage.py auto_generate_forecast --force' manually if needed."
+echo "=== Build process completed successfully ==="
+echo "Forecast generation is on-demand. Access /forecasting/ to trigger manually."

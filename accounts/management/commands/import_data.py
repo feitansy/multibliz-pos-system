@@ -23,6 +23,14 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'File not found: {file_path}'))
             return
         
+        # Skip import if data already exists
+        from sales.models import Product, Sale
+        from inventory.models import Stock
+        
+        if Product.objects.exists() or Sale.objects.exists() or Stock.objects.exists():
+            self.stdout.write(self.style.WARNING('Data already exists in database - skipping import'))
+            return
+        
         self.stdout.write(f'Loading data from {file_path}...')
         
         with open(file_path, 'r', encoding='utf-8') as f:
