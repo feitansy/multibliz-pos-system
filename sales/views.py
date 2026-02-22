@@ -654,10 +654,10 @@ class ReturnCreateView(LoginRequiredMixin, CreateView):
         log_action(
             self.request, 'CREATE', ret,
             object_name=f'Return #{ret.id} (Sale #{ret.sale.id})',
-            description=f'Created return request for Sale #{ret.sale.id} — Product: {ret.sale.product.name}, Qty: {ret.quantity}, Reason: {ret.reason or "N/A"}, Refund: ₱{ret.refund_amount or 0}',
+            description=f'Created return request for Sale #{ret.sale.id} — Product: {ret.sale.product.name}, Qty: {ret.quantity_returned}, Reason: {ret.reason or "N/A"}, Refund: ₱{ret.refund_amount or 0}',
             changes={
                 'Sale': {'old': '—', 'new': f'#{ret.sale.id} - {ret.sale.product.name}'},
-                'Quantity Returned': {'old': '—', 'new': str(ret.quantity)},
+                'Quantity Returned': {'old': '—', 'new': str(ret.quantity_returned)},
                 'Reason': {'old': '—', 'new': str(ret.reason or 'N/A')},
                 'Refund Amount': {'old': '—', 'new': f'₱{ret.refund_amount or 0}'},
                 'Status': {'old': '—', 'new': 'Pending'},
