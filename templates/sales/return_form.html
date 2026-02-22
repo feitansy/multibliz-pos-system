@@ -405,6 +405,7 @@
         // Fetch sale details when selection changes
         if (saleSelect) {
             saleSelect.addEventListener('change', function() {
+                console.log('Sale selection changed:', this.value);
                 if (this.value) {
                     fetchSaleDetails(this.value);
                 } else {
@@ -417,14 +418,20 @@
         // Auto-calculate refund when quantity changes
         if (quantityInput) {
             quantityInput.addEventListener('input', function() {
+                console.log('Quantity changed:', this.value);
                 calculateRefund();
             });
         }
         
         function fetchSaleDetails(saleId) {
+            console.log('Fetching sale details for sale ID:', saleId);
             fetch(`/sales/api/sale-details/${saleId}/`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Sale details response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Sale details data:', data);
                     if (data.success) {
                         currentSaleData = data.sale;
                         displaySaleInfo(data.sale);
@@ -491,6 +498,8 @@
                 const unitPrice = currentSaleData.unit_price;
                 const maxQuantity = currentSaleData.quantity;
                 
+                console.log('Calculating refund: qty=' + quantity + ', unitPrice=' + unitPrice + ', maxQty=' + maxQuantity);
+                
                 // Ensure quantity doesn't exceed original sale quantity
                 if (quantity > maxQuantity) {
                     quantityInput.value = maxQuantity;
@@ -499,11 +508,47 @@
                 const refundAmount = Math.min(quantity, maxQuantity) * unitPrice;
                 refundInput.value = refundAmount.toFixed(2);
                 
-                // Make refund amount readonly since it's auto-calculated
-                refundInput.readOnly = true;
+                console.log('Refund amount set to:', refundInput.value);
+                
+                // Disable but don't set readonly - readonly can cause issues with form submission
+                refundInput.disabled = false;  // Keep enabled so it submits
+            } else {
+                console.warn('Cannot calculate refund: saleData=', !!currentSaleData, 'quantityInput=', !!quantityInput, 'refundInput=', !!refundInput);
             }
         }
         {% endif %}
+    });
+    
+    // Form submission validation
+    document.getElementById('returnForm').addEventListener('submit', function(e) {
+        if (!document.getElementById('id_sale').value) {
+            alert('Please select a sale');
+            e.preventDefault();
+            return false;
+        }
+        
+        if (!document.getElementById('id_quantity_returned').value) {
+            alert('Please enter quantity to return');
+            e.preventDefault();
+            return false;
+        }
+        
+        if (!document.getElementById('id_reason').value) {
+            alert('Please select a return reason');
+            e.preventDefault();
+            return false;
+        }
+        
+        // Only for create form - ensure refund was calculated
+        {% if not object %}
+        if (parseFloat(document.getElementById('id_refund_amount').value) === 0) {
+            alert('Please select a sale first to calculate refund amount');
+            e.preventDefault();
+            return false;
+        }
+        {% endif %}
+        
+        console.log('Form validation passed, submitting...');
     });
 </script>
 {% endblock %}

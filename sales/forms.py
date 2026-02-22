@@ -124,6 +124,7 @@ class ReturnForm(forms.ModelForm):
                 'class': 'form-control',
                 'step': '0.01',
                 'min': '0',
+                'value': '0.00',
                 'placeholder': 'Enter refund amount',
                 'required': True,
             }),
@@ -151,3 +152,12 @@ class ReturnForm(forms.ModelForm):
                 )
         
         return sale
+    
+    def clean_refund_amount(self):
+        """Validate that refund amount is positive"""
+        refund_amount = self.cleaned_data.get('refund_amount')
+        
+        if refund_amount is not None and refund_amount < 0:
+            raise forms.ValidationError("Refund amount must be greater than or equal to 0.")
+        
+        return refund_amount

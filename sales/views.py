@@ -651,18 +651,23 @@ class ReturnCreateView(LoginRequiredMixin, CreateView):
         response = super().form_valid(form)
         
         ret = self.object
-        log_action(
-            self.request, 'CREATE', ret,
-            object_name=f'Return #{ret.id} (Sale #{ret.sale.id})',
-            description=f'Created return request for Sale #{ret.sale.id} — Product: {ret.sale.product.name}, Qty: {ret.quantity_returned}, Reason: {ret.reason or "N/A"}, Refund: ₱{ret.refund_amount or 0}',
-            changes={
-                'Sale': {'old': '—', 'new': f'#{ret.sale.id} - {ret.sale.product.name}'},
-                'Quantity Returned': {'old': '—', 'new': str(ret.quantity_returned)},
-                'Reason': {'old': '—', 'new': str(ret.reason or 'N/A')},
-                'Refund Amount': {'old': '—', 'new': f'₱{ret.refund_amount or 0}'},
-                'Status': {'old': '—', 'new': 'Pending'},
-            }
-        )
+        try:
+            log_action(
+                self.request, 'CREATE', ret,
+                object_name=f'Return #{ret.id} (Sale #{ret.sale.id})',
+                description=f'Created return request for Sale #{ret.sale.id} — Product: {ret.sale.product.name}, Qty: {ret.quantity_returned}, Reason: {ret.reason or "N/A"}, Refund: ₱{ret.refund_amount or 0}',
+                changes={
+                    'Sale': {'old': '—', 'new': f'#{ret.sale.id} - {ret.sale.product.name}'},
+                    'Quantity Returned': {'old': '—', 'new': str(ret.quantity_returned)},
+                    'Reason': {'old': '—', 'new': str(ret.reason or 'N/A')},
+                    'Refund Amount': {'old': '—', 'new': f'₱{ret.refund_amount or 0}'},
+                    'Status': {'old': '—', 'new': 'Pending'},
+                }
+            )
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'Error logging return creation: {str(e)}', exc_info=True)
         
         messages.success(self.request, "Return request created successfully.")
         return response
@@ -691,16 +696,21 @@ class ReturnUpdateView(LoginRequiredMixin, UpdateView):
             
             new_status = form.cleaned_data.get('status')
             
-            # Audit log
-            log_action(
-                self.request, 'UPDATE', self.object,
-                object_name=f'Return #{self.object.id} (Sale #{self.object.sale.id})',
-                description=f'Updated return #{self.object.id} status: {old_status.upper()} → {new_status.upper()} — Product: {self.object.sale.product.name}, Refund: ₱{self.object.refund_amount or 0}',
-                changes={
-                    'Status': {'old': old_status.upper(), 'new': new_status.upper()},
-                    'Processed By': {'old': '—', 'new': self.request.user.username},
-                }
-            )
+            # Audit log with error handling
+            try:
+                log_action(
+                    self.request, 'UPDATE', self.object,
+                    object_name=f'Return #{self.object.id} (Sale #{self.object.sale.id})',
+                    description=f'Updated return #{self.object.id} status: {old_status.upper()} → {new_status.upper()} — Product: {self.object.sale.product.name}, Refund: ₱{self.object.refund_amount or 0}',
+                    changes={
+                        'Status': {'old': old_status.upper(), 'new': new_status.upper()},
+                        'Processed By': {'old': '—', 'new': self.request.user.username},
+                    }
+                )
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f'Error logging return update: {str(e)}', exc_info=True)
             
             if new_status == 'rejected':
                 messages.warning(self.request, f"Return #{self.object.id} has been REJECTED.")
