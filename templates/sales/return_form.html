@@ -286,6 +286,7 @@
             </div>
         </div>
         
+        {% if object %}
         <div class="form-group">
             <label for="{{ form.status.id_for_label }}">
                 Return Status <span class="required-indicator">*</span>
@@ -299,6 +300,7 @@
                 </ul>
             {% endif %}
         </div>
+        {% endif %}
         
         <div class="form-group">
             <label for="{{ form.refund_payment_method.id_for_label }}">

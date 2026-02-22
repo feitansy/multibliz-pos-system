@@ -99,7 +99,7 @@ class ReturnForm(forms.ModelForm):
     
     class Meta:
         model = Return
-        fields = ['sale', 'quantity_returned', 'reason', 'reason_details', 'refund_amount', 'status']
+        fields = ['sale', 'quantity_returned', 'reason', 'reason_details', 'refund_amount', 'refund_payment_method']
         widgets = {
             'sale': forms.Select(attrs={
                 'class': 'form-control form-select',
@@ -127,7 +127,7 @@ class ReturnForm(forms.ModelForm):
                 'placeholder': 'Enter refund amount',
                 'required': True,
             }),
-            'status': forms.Select(attrs={
+            'refund_payment_method': forms.Select(attrs={
                 'class': 'form-control form-select',
             }),
         }
