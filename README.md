@@ -21,7 +21,6 @@ A comprehensive Django-based POS system designed for retail businesses with inte
 - **Analytics Dashboard** - Real-time business insights and charts
 - **Low Stock Alerts** - Automatic inventory monitoring
 - **Revenue Tracking** - Detailed financial reporting
-- **Dark Mode** - Modern UI with theme switching
 
 ### 🔒 Security
 - Role-based permissions
