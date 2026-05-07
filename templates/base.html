@@ -90,7 +90,7 @@
                     <span class="notification-badge">{{ notification_count }}</span>
                     {% endif %}
                 </button>
-                <div class="dropdown-menu dropdown-menu-end notification-menu" style="min-width: 380px; max-width: 420px;">
+                <div class="dropdown-menu dropdown-menu-end notification-menu">
                     <div class="notification-header">
                         <h6 class="mb-0">Notifications</h6>
                         <span class="badge" style="background: #ef4444; border-radius: 4px; font-size: 12px; font-weight: 700; padding: 4px 10px;">{{ notification_count }}</span>
@@ -154,7 +154,7 @@
     {% endif %}
         <!-- Messages Display -->
         {% if messages %}
-        <div class="messages-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+        <div class="messages-container" style="position: fixed; top: calc(var(--topbar-height) + 10px); right: 20px; z-index: 9999; max-width: 400px;">
             {% for message in messages %}
             <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert" style="margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px;">
                 {% if message.tags == 'success' %}

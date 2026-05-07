@@ -40,6 +40,35 @@ class StockForm(forms.ModelForm):
         self.fields['supplier'].required = False
         self.fields['supplier'].empty_label = "Select a supplier (optional)"
 
+    def clean_product(self):
+        """
+        Allow selecting products with existing stock when creating.
+        The view (StockCreateView) handles updating existing stock.
+        """
+        product = self.cleaned_data.get('product')
+        
+        # Only validate uniqueness on update, not on create
+        # On create, the view will check and update existing stock if needed
+        if self.instance.pk:
+            # This is an update - check if another stock record uses this product
+            existing = Stock.objects.filter(product=product).exclude(pk=self.instance.pk)
+            if existing.exists():
+                raise forms.ValidationError('Stock with this Product already exists.')
+        
+        return product
+    
+    def validate_unique(self):
+        """
+        Skip unique validation for product field on create.
+        The view handles merging with existing stock.
+        """
+        if not self.instance.pk:
+            # Skip all unique validation on create
+            pass
+        else:
+            # Run normal unique validation on update
+            super().validate_unique()
+
 
 class SupplierForm(forms.ModelForm):
     """Form for creating and updating suppliers"""

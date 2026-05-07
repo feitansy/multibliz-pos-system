@@ -13,4 +13,5 @@ urlpatterns = [
     path('stocks/<int:pk>/', views.StockDetailView.as_view(), name='stock_detail'),
     path('stocks/<int:pk>/update/', views.StockUpdateView.as_view(), name='stock_update'),
     path('stocks/<int:pk>/delete/', views.StockDeleteView.as_view(), name='stock_delete'),
+    path('api/product-stock/<int:product_id>/', views.get_product_stock, name='product_stock_api'),
 ]

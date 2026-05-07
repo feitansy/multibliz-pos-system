@@ -84,12 +84,8 @@ class SaleListView(LoginRequiredMixin, ListView):
             )
             queryset = queryset.filter(Exists(rejected_returns))
         else:
-            # Default: exclude fully returned sales (approved/completed)
-            approved_returns = Return.objects.filter(
-                sale=OuterRef('pk'),
-                status__in=['approved', 'completed']
-            )
-            queryset = queryset.exclude(Exists(approved_returns))
+            # Default: show ALL sales (no filtering by return status)
+            pass
         
         # Add search functionality
         search_query = self.request.GET.get('search', '').strip()
@@ -163,7 +159,14 @@ class SaleListView(LoginRequiredMixin, ListView):
             total_revenue=Sum('total_price')
         )
         context['total_quantity'] = totals['total_quantity'] or 0
-        context['total_revenue'] = totals['total_revenue'] or 0
+        
+        # Calculate net revenue (gross minus refunds for approved/completed returns)
+        gross_revenue = totals['total_revenue'] or 0
+        total_refunds = Return.objects.filter(
+            sale__in=queryset,
+            status__in=['approved', 'completed']
+        ).aggregate(total=Sum('refund_amount'))['total'] or 0
+        context['total_revenue'] = gross_revenue - total_refunds
         
         return context
 

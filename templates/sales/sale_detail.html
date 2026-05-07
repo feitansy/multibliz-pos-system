@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sale #{{ sale.id }} Details - Multibliz POS{% endblock %}
+
+{% block content %}
+<style>
+    .detail-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .detail-header h2 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .detail-header .actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .btn-action {
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        backdrop-filter: blur(10px);
+    }
+    
+    .btn-back {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        backdrop-filter: blur(10px);
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .detail-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-card {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .info-card h4 {
+        color: #667eea;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    
+    .info-label {
+        color: #6c757d;
+        font-weight: 600;
+    }
+    
+    .info-value {
+        color: #495057;
+        font-weight: 500;
+    }
+    
+    .status-badge {
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+    
+    .status-completed {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+</style>
+
+<div class="detail-header">
+    <h2>
+        <i class="fas fa-receipt"></i>
+        Sale #{{ sale.id }} Details
+    </h2>
+    <div class="actions">
+        <a href="{% url 'sale_update' sale.pk %}" class="btn-action btn-edit">
+            <i class="fas fa-edit"></i>
+            Edit Sale
+        </a>
+        <a href="{% url 'sale_receipt' sale.pk %}" class="btn-action btn-edit">
+            <i class="fas fa-print"></i>
+            Print Receipt
+        </a>
+        <a href="{% url 'sale_list' %}" class="btn-action btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Back to Sales
+        </a>
+    </div>
+</div>
+
+<div class="detail-container">
+    <div class="info-grid">
+        <!-- Sale Information -->
+        <div class="info-card">
+            <h4><i class="fas fa-shopping-cart"></i> Sale Information</h4>
+            <div class="info-row">
+                <span class="info-label">Sale ID:</span>
+                <span class="info-value">#{{ sale.id }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Sale Date:</span>
+                <span class="info-value">{{ sale.sale_date|date:"M d, Y - g:i A" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Quantity:</span>
+                <span class="info-value">{{ sale.quantity }} units</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Unit Price:</span>
+                <span class="info-value">₱{{ sale.unit_price }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Total Amount:</span>
+                <span class="info-value">₱{{ sale.total_price }}</span>
+            </div>
+        </div>
+        
+        <!-- Product Information -->
+        <div class="info-card">
+            <h4><i class="fas fa-box"></i> Product Information</h4>
+            <div class="info-row">
+                <span class="info-label">Product:</span>
+                <span class="info-value">{{ sale.product.name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">SKU:</span>
+                <span class="info-value">{{ sale.product.sku|default:"N/A" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Category:</span>
+                <span class="info-value">{{ sale.product.category|default:"N/A" }}</span>
+            </div>
+        </div>
+        
+        <!-- Customer Information -->
+        <div class="info-card">
+            <h4><i class="fas fa-user"></i> Customer Information</h4>
+            <div class="info-row">
+                <span class="info-label">Customer:</span>
+                <span class="info-value">{{ sale.customer_name|default:"Walk-in Customer" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Contact:</span>
+                <span class="info-value">{{ sale.customer_contact|default:"N/A" }}</span>
+            </div>
+        </div>
+    </div>
+    
+    {% if sale.returns.exists %}
+    <!-- Returns Information -->
+    <div class="info-card">
+        <h4><i class="fas fa-undo"></i> Returns</h4>
+        {% for return in sale.returns.all %}
+        <div class="info-row">
+            <span class="info-label">Return #{{ return.id }}:</span>
+            <span class="info-value">
+                {{ return.quantity_returned }} units - 
+                <span class="status-badge status-{{ return.status }}">{{ return.get_status_display }}</span>
+                - ₱{{ return.refund_amount }}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

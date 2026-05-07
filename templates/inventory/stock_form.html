@@ -54,15 +54,21 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="{{ form.quantity.id_for_label }}" class="form-label">
-                                        <i class="fas fa-cubes text-info"></i>Quantity
+                                        <i class="fas fa-cubes text-info"></i>Quantity to Add
                                     </label>
+                                    <!-- Current stock badge (shown when product is selected) -->
+                                    <div id="currentStockBadge" class="mb-2" style="display:none;">
+                                        <span class="badge bg-info fs-6">
+                                            <i class="fas fa-box me-1"></i>Current stock: <strong id="currentStockQty">0</strong> units
+                                        </span>
+                                    </div>
                                     {{ form.quantity }}
                                     {% if form.quantity.errors %}
                                         <div class="invalid-feedback d-block">
                                             <i class="fas fa-exclamation-circle"></i>{{ form.quantity.errors.0 }}
                                         </div>
                                     {% else %}
-                                        <small class="form-text">Current stock units</small>
+                                        <small class="form-text" id="quantityHelpText">Enter units to add to stock</small>
                                     {% endif %}
                                 </div>
                             </div>
@@ -114,10 +120,13 @@
 </div>
 
 <script>
-// Product search filter
+// Product search filter + auto-fetch current stock
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('productSearchInput');
     const productSelect = document.getElementById('id_product');
+    const currentStockBadge = document.getElementById('currentStockBadge');
+    const currentStockQty = document.getElementById('currentStockQty');
+    const quantityHelpText = document.getElementById('quantityHelpText');
     
     if (searchInput && productSelect) {
         // Store original options
@@ -136,12 +145,58 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // If only one non-empty option matches, select it
+            // If only one non-empty option matches, select it and fetch stock
             const nonEmptyOptions = Array.from(productSelect.options).filter(o => o.value !== '');
             if (nonEmptyOptions.length === 1 && searchTerm.length > 0) {
                 productSelect.value = nonEmptyOptions[0].value;
+                fetchProductStock(nonEmptyOptions[0].value);
             }
         });
+
+        // Fetch stock when product dropdown changes
+        productSelect.addEventListener('change', function() {
+            if (this.value) {
+                fetchProductStock(this.value);
+            } else {
+                hideStockInfo();
+            }
+        });
+
+        // If a product is already selected (e.g. on edit), fetch its stock
+        if (productSelect.value) {
+            fetchProductStock(productSelect.value);
+        }
+    }
+
+    function fetchProductStock(productId) {
+        fetch(`/inventory/api/product-stock/${productId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (currentStockBadge && currentStockQty) {
+                    currentStockQty.textContent = data.quantity;
+                    currentStockBadge.style.display = 'block';
+
+                    // Color the badge based on stock level
+                    const badge = currentStockBadge.querySelector('.badge');
+                    if (data.quantity === 0) {
+                        badge.className = 'badge bg-danger fs-6';
+                    } else if (data.quantity <= data.reorder_level) {
+                        badge.className = 'badge bg-warning text-dark fs-6';
+                    } else {
+                        badge.className = 'badge bg-success fs-6';
+                    }
+
+                    if (quantityHelpText) {
+                        quantityHelpText.textContent = `Currently ${data.quantity} units in stock. Enter how many to add.`;
+                    }
+                }
+            })
+            .catch(() => hideStockInfo());
+    }
+
+    function hideStockInfo() {
+        if (currentStockBadge) currentStockBadge.style.display = 'none';
+        if (quantityHelpText) quantityHelpText.textContent = 'Enter units to add to stock';
     }
     
     // Real-time form validation feedback

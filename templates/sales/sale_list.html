@@ -7,6 +7,20 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <style>
+    /* Make the table container scrollable with sticky header */
+    .table-responsive {
+        max-height: 75vh;
+        overflow-y: auto;
+    }
+
+    #saleTable thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: #f8f9fa;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    }
+
     /* Table fits within content area at 100% zoom (sidebar=240px, padding=48px → ~1078px available) */
     #saleTable {
         table-layout: fixed;
@@ -214,7 +228,7 @@
                         <span class="badge bg-info">{{ total_quantity }} units</span>
                     </div>
                     <div class="d-flex gap-2 align-items-center">
-                        <small class="text-muted fw-bold">Total Revenue:</small>
+                        <small class="text-muted fw-bold">Net Revenue:</small>
                         <span class="badge bg-success">₱{{ total_revenue|floatformat:2 }}</span>
                     </div>
                 </div>

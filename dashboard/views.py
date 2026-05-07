@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from sales.models import Sale
+from sales.models import Sale, Return
 from inventory.models import Stock
 from forecasting.models import Forecast
 from .models import DashboardMetric
@@ -31,9 +31,21 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             sale_date__date__lt=last_30_days
         ).aggregate(total=Sum('total_price'), count=Count('id'))
 
-        # Calculate KPI change percentage
-        current_total = total_sales_current['total'] or 0
-        previous_total = total_sales_previous['total'] or 0
+        # Deduct completed/approved refunds from revenue
+        current_refunds = Return.objects.filter(
+            status__in=['approved', 'completed'],
+            processed_date__date__gte=last_30_days
+        ).aggregate(total=Sum('refund_amount'))['total'] or 0
+        
+        previous_refunds = Return.objects.filter(
+            status__in=['approved', 'completed'],
+            processed_date__date__gte=last_60_days,
+            processed_date__date__lt=last_30_days
+        ).aggregate(total=Sum('refund_amount'))['total'] or 0
+
+        # Calculate KPI change percentage (net of refunds)
+        current_total = (total_sales_current['total'] or 0) - current_refunds
+        previous_total = (total_sales_previous['total'] or 0) - previous_refunds
         
         if previous_total > 0:
             sales_change = ((current_total - previous_total) / previous_total) * 100
@@ -49,16 +61,20 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # Forecast summary
         upcoming_forecasts = Forecast.objects.filter(forecast_date__gte=today)[:5]
 
-        # 7-day sales trend data (for sparkline)
+        # 7-day sales trend data (for sparkline) - net of refunds
         seven_day_sales = []
         for i in range(6, -1, -1):
             day = today - timedelta(days=i)
             day_total = Sale.objects.filter(sale_date__date=day).aggregate(
                 total=Sum('total_price')
             )['total'] or 0
+            day_refunds = Return.objects.filter(
+                status__in=['approved', 'completed'],
+                processed_date__date=day
+            ).aggregate(total=Sum('refund_amount'))['total'] or 0
             seven_day_sales.append({
                 'date': day.strftime('%a'),
-                'amount': float(day_total)
+                'amount': float(day_total - day_refunds)
             })
 
         # Sales by day of week for bar chart (last 30 days)
@@ -129,8 +145,14 @@ class AnalyticsDashboardView(LoginRequiredMixin, TemplateView):
             sale_date__date__lte=end_date
         ).select_related('product')
 
-        # ===== METRICS =====
-        total_revenue = sales_in_period.aggregate(Sum('total_price'))['total_price__sum'] or 0
+        # ===== METRICS (net of refunds) =====
+        gross_revenue = sales_in_period.aggregate(Sum('total_price'))['total_price__sum'] or 0
+        total_refunds = Return.objects.filter(
+            status__in=['approved', 'completed'],
+            processed_date__date__gte=start_date,
+            processed_date__date__lte=end_date
+        ).aggregate(total=Sum('refund_amount'))['total'] or 0
+        total_revenue = gross_revenue - total_refunds
         transaction_count = sales_in_period.count()
         avg_order_value = total_revenue / transaction_count if transaction_count > 0 else 0
         
@@ -138,37 +160,41 @@ class AnalyticsDashboardView(LoginRequiredMixin, TemplateView):
         days_in_period = (end_date - start_date).days + 1
         avg_daily_revenue = total_revenue / days_in_period if days_in_period > 0 else 0
 
-        # ===== SALES TREND (Daily) =====
+        # ===== SALES TREND (Daily, net of refunds) =====
         sales_trend = []
         current = start_date
         while current <= end_date:
             day_sales = sales_in_period.filter(
                 sale_date__date=current
             ).aggregate(Sum('total_price'))['total_price__sum'] or 0
+            day_refunds = Return.objects.filter(
+                status__in=['approved', 'completed'],
+                processed_date__date=current
+            ).aggregate(total=Sum('refund_amount'))['total'] or 0
             
             sales_trend.append({
                 'date': current.isoformat(),
-                'revenue': float(day_sales),
+                'revenue': float(day_sales - day_refunds),
                 'count': sales_in_period.filter(sale_date__date=current).count()
             })
             current += timedelta(days=1)
 
-        # ===== REVENUE BY CATEGORY =====
+        # ===== REVENUE BY CATEGORY (net of refunds) =====
         revenue_by_category = {}
         for sale in sales_in_period:
             category = sale.product.category or 'Uncategorized'
             if category not in revenue_by_category:
                 revenue_by_category[category] = 0
-            revenue_by_category[category] += float(sale.total_price)
+            revenue_by_category[category] += float(sale.net_total)
 
-        # ===== TOP PRODUCTS =====
+        # ===== TOP PRODUCTS (net of refunds) =====
         top_products = {}
         for sale in sales_in_period:
             product_name = sale.product.name
             if product_name not in top_products:
                 top_products[product_name] = {'quantity': 0, 'revenue': 0}
             top_products[product_name]['quantity'] += sale.quantity
-            top_products[product_name]['revenue'] += float(sale.total_price)
+            top_products[product_name]['revenue'] += float(sale.net_total)
 
         # Sort by revenue and get top 10
         top_products_sorted = sorted(

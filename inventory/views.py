@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q, Sum, F, Value
 from django.db.models.functions import Coalesce
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .models import Supplier, Stock
 from .forms import StockForm, SupplierForm
@@ -183,3 +185,17 @@ class InventoryPrintReportView(LoginRequiredMixin, TemplateView):
         context['generated_date'] = datetime.now()
         
         return context
+
+
+@login_required
+def get_product_stock(request, product_id):
+    """API endpoint to get current stock quantity for a product."""
+    try:
+        stock = Stock.objects.get(product_id=product_id)
+        return JsonResponse({
+            'quantity': stock.quantity,
+            'reorder_level': stock.reorder_level,
+            'product_name': stock.product.name,
+        })
+    except Stock.DoesNotExist:
+        return JsonResponse({'quantity': 0, 'reorder_level': 10, 'product_name': ''})

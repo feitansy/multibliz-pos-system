@@ -179,7 +179,7 @@
 </div>
 
 <div class="form-container">
-    <form method="post" id="returnForm">
+    <form method="post" id="returnForm" action="{% if object %}{% url 'return_update' object.pk %}{% else %}{% url 'return_create' %}{% endif %}">
         {% csrf_token %}
         
         {% if not object %}
@@ -315,6 +315,38 @@
                 </ul>
             {% endif %}
         </div>
+
+        <div class="form-group">
+            <label for="{{ form.refund_payment_method.id_for_label }}">
+                Refund Payment Method <span class="required-indicator">*</span>
+            </label>
+            {{ form.refund_payment_method }}
+            {% if form.refund_payment_method.errors %}
+                <ul class="errorlist">
+                    {% for error in form.refund_payment_method.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.reason_details.id_for_label }}">
+                Additional Details
+            </label>
+            {{ form.reason_details }}
+            {% if form.reason_details.errors %}
+                <ul class="errorlist">
+                    {% for error in form.reason_details.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.refund_amount.id_for_label }}">
+                Refund Amount (₱) <span class="required-indicator">*</span>
             </label>
             {{ form.refund_amount }}
             {% if form.refund_amount.errors %}
@@ -519,36 +551,108 @@
         {% endif %}
     });
     
-    // Form submission validation
+    // Form submission validation - TEMPORARILY DISABLED FOR DEBUGGING
+    // document.getElementById('returnForm').addEventListener('submit', function(e) {
+    //     console.log('Form submit event fired');
+    //     console.log('Object exists:', {{ object|yesno:"true,false" }});
+        
+    //     {% if not object %}
+    //     console.log('Running create form validation');
+    //     // Only validate these fields for create form
+    //     if (!document.getElementById('id_sale').value) {
+    //         alert('Please select a sale');
+    //         e.preventDefault();
+    //         return false;
+    //     }
+        
+    //     if (!document.getElementById('id_quantity_returned').value) {
+    //         alert('Please enter quantity to return');
+    //         e.preventDefault();
+    //         return false;
+    //     }
+        
+    //     if (!document.getElementById('id_reason').value) {
+    //         alert('Please select a return reason');
+    //         e.preventDefault();
+    //         return false;
+    //     }
+        
+    //     // Only for create form - ensure refund was calculated
+    //     if (parseFloat(document.getElementById('id_refund_amount').value) === 0) {
+    //         alert('Please select a sale first to calculate refund amount');
+    //         e.preventDefault();
+    //         return false;
+    //     }
+    //     {% else %}
+    //     console.log('Running update form validation');
+    //     // For update form, just ensure status is selected
+    //     const statusField = document.getElementById('id_status');
+    //     console.log('Status field found:', !!statusField);
+    //     console.log('Status field value:', statusField ? statusField.value : 'N/A');
+        
+    //     if (!statusField || !statusField.value) {
+    //         alert('Please select a return status');
+    //         e.preventDefault();
+    //         return false;
+    //     }
+    //     {% endif %}
+        
+    //     console.log('Form validation passed, submitting...');
+        
+    //     // Add loading state to button
+    //     const submitBtn = document.querySelector('button[type="submit"]');
+    //     if (submitBtn) {
+    //         submitBtn.disabled = true;
+    //         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    //     }
+        
+    //     // Ensure form submits (don't prevent default)
+    //     console.log('Allowing form submission to proceed');
+    //     return true;
+    // });
+    
+    // Simple form validation - now that template issue is fixed
     document.getElementById('returnForm').addEventListener('submit', function(e) {
-        if (!document.getElementById('id_sale').value) {
+        {% if not object %}
+        // Only validate these fields for create form
+        if (!document.getElementById('id_sale') || !document.getElementById('id_sale').value) {
             alert('Please select a sale');
             e.preventDefault();
             return false;
         }
         
-        if (!document.getElementById('id_quantity_returned').value) {
+        if (!document.getElementById('id_quantity_returned') || !document.getElementById('id_quantity_returned').value) {
             alert('Please enter quantity to return');
             e.preventDefault();
             return false;
         }
         
-        if (!document.getElementById('id_reason').value) {
+        if (!document.getElementById('id_reason') || !document.getElementById('id_reason').value) {
             alert('Please select a return reason');
             e.preventDefault();
             return false;
         }
         
-        // Only for create form - ensure refund was calculated
-        {% if not object %}
-        if (parseFloat(document.getElementById('id_refund_amount').value) === 0) {
+        if (!document.getElementById('id_refund_amount') || parseFloat(document.getElementById('id_refund_amount').value) === 0) {
             alert('Please select a sale first to calculate refund amount');
+            e.preventDefault();
+            return false;
+        }
+        {% else %}
+        // For update form, just ensure status is selected
+        if (!document.getElementById('id_status') || !document.getElementById('id_status').value) {
+            alert('Please select a return status');
             e.preventDefault();
             return false;
         }
         {% endif %}
         
-        console.log('Form validation passed, submitting...');
+        // Add loading state to button
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> {% if object %}Updating...{% else %}Processing...{% endif %}';
+        }
     });
 </script>
 {% endblock %}
